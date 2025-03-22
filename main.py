@@ -3,7 +3,7 @@ import torch
 import chess
 
 from training import train_model
-#from playGame import ChessGame - TODO: Implement playGame.py for updated neuralNetwork
+from playGame import ChessGameUI # TODO: Improve playGame.py - implement inference usage
 
 from readGames import PGNReader
 from dotenv import load_dotenv
@@ -48,15 +48,23 @@ if __name__ == "__main__":
                 positions=positions,
                 moves=moves,
                 values=values,
-                epochs=2,
+                epochs=20,
                 batch_size=2048,
                 learning_rate=1e-3,
                 val_split=0.1,
             )
             
-            # Save the model in the models directory
-            torch.save(model.state_dict(), "models/TestBotEG.pth")
-            pass
+            del positions, moves, values
+            gc.collect()
+            
+            saveModel = input("Save the model? (y/n)")
+            if saveModel.lower() == 'y':
+                # Save the model in the models directory
+                torch.save(model.state_dict(), "models/TestBotEG.pth")
+                pass
+            else:
+                pass
+
         elif int(userInput) == 2:
             # Train from self-play
             print("Training from self-play")
@@ -71,6 +79,7 @@ if __name__ == "__main__":
                 # Load the user-selected model
                 model = torch.load(f"models/{models[modelIndex-1]}")
                 
+                # Check if model is loaded - debug
                 # Output name of model
                 print(f"Model loaded: {models[modelIndex-1]}")
                 
@@ -82,6 +91,42 @@ if __name__ == "__main__":
                 # Play game TODO - Implement updated playGame.py
                 #game = ChessGame(model, think_time=1.0)
                 #game.play()
+                
+                game = ChessGameUI(model, think_time=1.0)
+                
+                while not game.is_game_over():
+                    print(game.board)
+                    
+                    if game.board.turn == chess.WHITE:
+                        # Handle player move via UI
+                        move_uci = input("Your move (UCI) or 'undo' to take back: ")
+                        
+                        if move_uci.lower() == 'undo':
+                            if game.undo_move():
+                                # Undo again to get back to player's turn
+                                game.undo_move()
+                                print("Move undone")
+                            else:
+                                print("Cannot undo!")
+                            continue
+                        elif move_uci.lower() == 'reset':
+                            game.reset()
+                            print("Game reset")
+                            continue
+                            
+                        try:
+                            move = chess.Move.from_uci(move_uci)
+                            if game.make_player_move(move):
+                                print("Move made")
+                            else:
+                                print("Illegal move!")
+                        except ValueError:
+                            print("Invalid format!")
+                    else:
+                        # Engine move
+                        game.make_engine_move()
+                
+                print(f"Game over: {game.get_result()}")
         else:
             print("Invalid input")
     
