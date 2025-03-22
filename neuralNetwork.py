@@ -4,8 +4,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 import pytorch_lightning as pl
 
-from pytorch_lightning.utilities import MixedPrecision
-
 # Tensor cores for faster training
 torch.set_float32_matmul_precision('medium')
 torch.backends.cudnn.benchmark = True
@@ -111,7 +109,7 @@ class ChessNN(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = optim.AdamW(self.parameters(), lr=self.learning_rate)
         scheduler = optim.lr_scheduler.ReduceLROnPlateau( # TODO - test other schedulers more
-            optimizer, patience=3, factor=0.5, verbose=True
+            optimizer, patience=3, factor=0.5
         )
         return {
             'optimizer': optimizer,
