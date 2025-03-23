@@ -9,7 +9,7 @@ torch.set_float32_matmul_precision('medium')
 torch.backends.cudnn.benchmark = True
 
 class ChessNN(pl.LightningModule):
-    def __init__(self, input_channels=3, learning_rate=1e-3):
+    def __init__(self, input_channels=18, learning_rate=1e-3):
         super().__init__()
         self.learning_rate = learning_rate
         
