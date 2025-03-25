@@ -65,3 +65,18 @@ class ChessEncoder:
             chess.KNIGHT: 67, chess.PAWN: 68
         }
         return base_idx + promo_offset[move.promotion]
+    
+    @staticmethod
+    def decode_move(move_idx):
+        """Decode a move index back to a chess.Move object."""
+        from_square = move_idx // 69
+        to_square = move_idx % 69
+
+        if to_square < 64:
+            # Regular move
+            return chess.Move(from_square, to_square)
+        else:
+            # Promotion move
+            promotion_map = {64: chess.QUEEN, 65: chess.ROOK, 66: chess.BISHOP, 67: chess.KNIGHT, 68: chess.PAWN}
+            promotion_piece = promotion_map[to_square]
+            return chess.Move(from_square, to_square - 64, promotion=promotion_piece)

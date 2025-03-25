@@ -161,3 +161,6 @@ cython_debug/
 
 # PyTorch lightning logs
 lightning_logs/
+
+# Ignore temp_model directory
+.temp_model/
