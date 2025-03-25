@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 
 import gc
 
+import time
+
 if __name__ == "__main__":
     ''' 
     1. Read existing games to be used for training
@@ -42,13 +44,17 @@ if __name__ == "__main__":
             3.1. Learns from the games generated/given
             3.2. Learns from self-play
             '''
+            
+            # Timer for training time
+            
+            trainingStart = time.time()
             # 3.1
             # Train the model
             model = train_model(
                 positions=positions,
                 moves=moves,
                 values=values,
-                epochs=20,
+                epochs=100,
                 batch_size=2048,
                 learning_rate=1e-3,
                 val_split=0.1,
@@ -57,76 +63,104 @@ if __name__ == "__main__":
             del positions, moves, values
             gc.collect()
             
+            # End of training
+            trainingEnd = time.time()
+            
+            # Training time in minutes
+            print(f"Training time: {(trainingEnd - trainingStart) / 60:.2f} minutes")
+            
+            # Save model - fallback case
+            torch.save(model.state_dict(), "TestBotFallbackEG.pth")
+            
             saveModel = input("Save the model? (y/n)")
+            
             if saveModel.lower() == 'y':
-                # Save the model in the models directory
-                torch.save(model.state_dict(), "models/TestBotEG.pth")
+                # Try to sdave the model in the models directory, else save in the working directory
+                try:
+                    torch.save(model.state_dict(), "models/TestBotEG.pth")
+                except: # If error - save in the working directory
+                    torch.save(model.state_dict(), "TestBotEG.pth")
                 pass
             else:
                 pass
 
         elif int(userInput) == 2:
             # Train from self-play
-            print("Training from self-play")
+            print("Self-play")
+            
+            
         elif int(userInput) == 3:
             # Loads all the model names from the models directory, prompting the user to select one
             models = [model for model in os.listdir("models") if model.endswith(".pth")]
             print("Select a model to load:")
             for i, model in enumerate(models):
                 print(f"{i+1}. {model}")
-                modelIndex = int(input())
+            
+            modelIndex = int(input())
                 
-                # Load the user-selected model
-                model = torch.load(f"models/{models[modelIndex-1]}")
+            # Load the user-selected model
+            model = torch.load(f"models/{models[modelIndex-1]}")
+            
+            # Check if model is loaded - debug
+            # Output name of model
+            print(f"Model loaded: {models[modelIndex-1]}")
+            
+            # Inference test with a random board
+            #board = chess.Board()
+            #policy_probs, value = predict_moves(model, [board])
+            #print(f"Position evaluation: {value[0][0]:.4f}")
+            
+            # Play game TODO - Implement updated playGame.py
+            #game = ChessGame(model, think_time=1.0)
+            #game.play()
+            
+            
+            # Benchmark against stockfish using Benchmark class
+            from benchmark import Benchmark
+            from encoding import ChessEncoder
+            encoder = ChessEncoder()
+            benchmark = Benchmark(model, encoder)
+            results = benchmark.run_benchmark(1000)
+            print(f"Average difference: {results['avg_abs_diff_cp']:.2f} centipawns")
+            print(f"Same move rate: {results['same_move_rate']:.2f}%")
+            
+            input("Press enter to continue")
+            
+            game = ChessGameUI(model, think_time=1.0)
+            
+            while not game.is_game_over():
+                print(game.board)
                 
-                # Check if model is loaded - debug
-                # Output name of model
-                print(f"Model loaded: {models[modelIndex-1]}")
-                
-                # Inference test with a random board
-                #board = chess.Board()
-                #policy_probs, value = predict_moves(model, [board])
-                #print(f"Position evaluation: {value[0][0]:.4f}")
-                
-                # Play game TODO - Implement updated playGame.py
-                #game = ChessGame(model, think_time=1.0)
-                #game.play()
-                
-                game = ChessGameUI(model, think_time=1.0)
-                
-                while not game.is_game_over():
-                    print(game.board)
+                if game.board.turn == chess.WHITE:
+                    # Handle player move via UI
+                    move_uci = input("Your move (UCI) or 'undo' to take back: ")
                     
-                    if game.board.turn == chess.WHITE:
-                        # Handle player move via UI
-                        move_uci = input("Your move (UCI) or 'undo' to take back: ")
+                    if move_uci.lower() == 'undo':
+                        if game.undo_move():
+                            # Undo again to get back to player's turn
+                            game.undo_move()
+                            print("Move undone")
+                        else:
+                            print("Cannot undo!")
+                        continue
+                    elif move_uci.lower() == 'reset':
+                        game.reset()
+                        print("Game reset")
+                        continue
                         
-                        if move_uci.lower() == 'undo':
-                            if game.undo_move():
-                                # Undo again to get back to player's turn
-                                game.undo_move()
-                                print("Move undone")
-                            else:
-                                print("Cannot undo!")
-                            continue
-                        elif move_uci.lower() == 'reset':
-                            game.reset()
-                            print("Game reset")
-                            continue
-                            
-                        try:
-                            move = chess.Move.from_uci(move_uci)
-                            if game.make_player_move(move):
-                                print("Move made")
-                            else:
-                                print("Illegal move!")
-                        except ValueError:
-                            print("Invalid format!")
-                    else:
-                        # Engine move
-                        game.make_engine_move()
-                
-                print(f"Game over: {game.get_result()}")
+                    try:
+                        move = chess.Move.from_uci(move_uci)
+                        if game.make_player_move(move):
+                            print("Move made")
+                        else:
+                            print("Illegal move!")
+                    except ValueError:
+                        print("Invalid format!")
+                else:
+                    # Engine move
+                    game.make_engine_move()
+            
+            print(f"Game over: {game.get_result()}")
         else:
             print("Invalid input")
     
