@@ -18,7 +18,7 @@ class ChessNN(pl.LightningModule):
         
         # 2 Residual blocks - TODO: test increased number block effect on training speed and performance
         self.res_blocks = nn.ModuleList([
-            self._make_res_block(128) for _ in range(2)
+            self._make_res_block(128) for _ in range(10)
         ])
         
         # Policy head
