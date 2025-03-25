@@ -91,10 +91,16 @@ def train_model(positions, moves, values, epochs=100, batch_size=2048,
         callbacks=[
             pl.callbacks.ModelCheckpoint(
                 dirpath=output_dir,
-                filename='best-model',
+                filename='best-model-{epoch:02d}-{val_accuracy:.4f}',
                 save_top_k=1,
-                monitor='val_loss',
-                mode='min'
+                monitor='val_accuracy',
+                mode='max'
+            ),
+            pl.callbacks.EarlyStopping(
+                monitor='val_accuracy',
+                patience=20,
+                mode='max',
+                min_delta=0.001
             ),
             pl.callbacks.LearningRateMonitor()
         ]
