@@ -42,41 +42,58 @@ class ChessEngine:
         """
         (Try to) Find the best move for a given position
         Soon to be replaced by MCTS approach from inference.py
-        
+
         Args:
             board: The current chess board
-            
+
         Returns:
             Tuple with the best move and a dictionary of probabilities
         """
         start_time = time.time()
-        moves_evaluated = {}  # Track evaluations for each move
-        
+        moves_evaluated = {}  # Track cumulative evaluations for each move
+
         with torch.no_grad():
             # Check positions until time runs out
             evaluations_done = 0
             while (time.time() - start_time) < self.think_time: # While time left
-                # Encode board
                 encoded_position = self.encoder.encode_board(board)
                 position = torch.FloatTensor(encoded_position).unsqueeze(0).to(self.device)
-                
+
                 # Run inference with mixed precision
                 with torch.amp.autocast(device_type=self.device.type):
                     policy, value = self.model(position)
-                
+
+                # --- Debug: Print raw policy logits ---
+                #print(f"\n--- Raw Policy Logits (Cycle {evaluations_done + 1}) ---")
+                #print(policy)
+                #print(f"Policy tensor shape: {policy.shape}, dtype: {policy.dtype}, device: {policy.device}")
+                # --- End Debug ---
+
+
+                temperature = 0.8
+
                 # Process move probabilities
-                move_probs = F.softmax(policy, dim=1).squeeze().cpu()
-                
+                move_probs = F.softmax(policy / temperature, dim=1).squeeze().cpu()
+
+                # --- Debug: Store and print scores for this specific evaluation ---
+                current_eval_scores = {}
+                #print(f"\n--- Evaluation Cycle {evaluations_done + 1} ---")
+                # --- End Debug ---
+
                 # Update evaluations for legal moves
                 for move in board.legal_moves:
                     move_idx = self.encoder.encode_move(move)
-                    
+
                     # Skip moves that are out of range for our model's output
                     if move_idx >= move_probs.shape[0]:
                         continue
-                        
+
                     score = move_probs[move_idx].item()
-                    
+
+                    # --- Debug: Store score for this cycle ---
+                    current_eval_scores[move] = score
+                    # --- End Debug ---
+
                     if move in moves_evaluated:
                         moves_evaluated[move] = (
                             moves_evaluated[move][0] + score,
@@ -84,32 +101,43 @@ class ChessEngine:
                         )
                     else:
                         moves_evaluated[move] = (score, 1)
-                
+
+                # --- Debug: Print scores for this cycle and pause ---
+                #print("Scores for this evaluation cycle:")
+                # Sort by score descending for readability
+                #sorted_scores = sorted(current_eval_scores.items(), key=lambda item: item[1], reverse=True)
+                #for move, score in sorted_scores:
+                    #print(f"  {move.uci()}: {score:.6f}")
+                #input("Press Enter to continue to next evaluation cycle (or Ctrl+C to stop)...")
+                # --- End Debug ---
+
                 evaluations_done += 1
-        
+
         # Get average of positions evaluated (no tree search - same positions get evaluated multiple times)
         move_scores = {}
         best_move = None
         best_score = -float('inf')
-        
+
+        # ... rest of the function remains the same ...
+
         for move, (total_score, count) in moves_evaluated.items():
             avg_score = total_score / count
             move_scores[move] = avg_score
-            
+
             if avg_score > best_score:
                 best_score = avg_score
                 best_move = move
-        
+
         # If no legal moves were found, return a random legal move
         if best_move is None and len(list(board.legal_moves)) > 0:
             print("No legal moves found, selecting a random move")
             best_move = next(iter(board.legal_moves))
             move_scores[best_move] = 1.0
-        
+
         # Debug log info - time taken + positions evaluated
         elapsed = time.time() - start_time
-        print(f"Thought for {elapsed:.2f}s, evaluated {evaluations_done} positions")
-        
+        print(f"\nFinished thinking. Total time: {elapsed:.2f}s, evaluated {evaluations_done} positions")
+
         return best_move, move_scores
 
     def get_position_evaluation(self, board: chess.Board):

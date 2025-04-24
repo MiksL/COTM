@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import pytorch_lightning as pl
+from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 
 # Tensor cores for faster training
 torch.set_float32_matmul_precision('medium')
@@ -100,11 +101,53 @@ class ChessNN(pl.LightningModule):
         
         return loss
 
-    def training_step(self, batch):
-        return self._shared_step(batch, 'train')
+    def training_step(self, batch, batch_idx):
+        positions, moves, values = batch
+        
+        positions = positions.to(self.device)
+        moves = moves.to(self.device)
+        values = values.to(self.device)
 
-    def validation_step(self, batch):
-        return self._shared_step(batch, 'val')
+        # Passing tensors directly to the model
+        policy_logits, value_pred = self(positions)
+
+        # Calculate loss (using the tensors directly)
+        policy_loss = F.cross_entropy(policy_logits, moves)
+        value_loss = F.mse_loss(value_pred, values)
+        total_loss = policy_loss + value_loss
+        #total_loss = policy_loss + 0.2 * value_loss
+
+        self.log('train_loss', total_loss, on_step=True, on_epoch=True, prog_bar=True, logger=True, batch_size=positions.size(0))
+        self.log('train_policy_loss', policy_loss, on_step=False, on_epoch=True, logger=True, batch_size=positions.size(0))
+        self.log('train_value_loss', value_loss, on_step=False, on_epoch=True, logger=True, batch_size=positions.size(0))
+
+        return total_loss
+
+    def validation_step(self, batch, batch_idx):
+        positions, moves, values = batch
+        
+        positions = positions.to(self.device)
+        moves = moves.to(self.device)
+        values = values.to(self.device)
+
+        # Passing tensors directly to the model
+        policy_logits, value_pred = self(positions)
+
+        # Calculate loss
+        policy_loss = F.cross_entropy(policy_logits, moves)
+        value_loss = F.mse_loss(value_pred, values)
+        total_loss = policy_loss + value_loss
+
+        # Calculate Accuracy using the tensors directly
+        policy_pred = torch.argmax(policy_logits, dim=1)
+        accuracy = (policy_pred == moves).float().mean()
+
+        self.log('val_loss', total_loss, on_step=False, on_epoch=True, prog_bar=True, logger=True, batch_size=positions.size(0))
+        self.log('val_policy_loss', policy_loss, on_step=False, on_epoch=True, logger=True, batch_size=positions.size(0))
+        self.log('val_value_loss', value_loss, on_step=False, on_epoch=True, logger=True, batch_size=positions.size(0))
+        self.log('val_accuracy', accuracy, on_step=False, on_epoch=True, prog_bar=True, logger=True, batch_size=positions.size(0))
+
+        return total_loss
     
     def configure_optimizers(self):
         optimizer = optim.AdamW(self.parameters(), lr=self.learning_rate)

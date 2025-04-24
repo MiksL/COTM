@@ -4,48 +4,58 @@ import chess
 class ChessEncoder:
     """ Encoding class for board and move encoding """
     
+    PIECE_VALUES = {
+        chess.PAWN: 1.0, chess.KNIGHT: 3.0, chess.BISHOP: 3.0,
+        chess.ROOK: 5.0, chess.QUEEN: 9.0, chess.KING: 0.0
+    }
+    
     @staticmethod
     def encode_board(board):
-        """Encode chess board as planes of features"""
-        
-        # 18 planes for each feature in 8x8 grid
+        # Allocate planes
         planes = np.zeros((18, 8, 8), dtype=np.uint8)
 
-        # Planes 0-11: Piece positions (6 piece types × 2 colors)
-        for square, piece in board.piece_map().items():
-            rank, file = divmod(square, 8)
-            piece_idx = piece.piece_type - 1
-            if piece.color == chess.BLACK:
-                piece_idx += 6
-            planes[piece_idx, rank, file] = 1
+        # Initialize material counters
+        white_material = 0.0
+        black_material = 0.0
 
-        # Plane 12: Side to move
+        # Iterate piece map
+        piece_map_items = board.piece_map().items() # Get items
+
+        for square, piece in piece_map_items:
+            # 1. Place piece on corresponding plane
+            rank, file = divmod(square, 8)
+            piece_type = piece.piece_type
+            piece_idx = piece_type - 1  # 0-5
+
+            # 2. Accumulate material values for balance plane
+            piece_value = ChessEncoder.PIECE_VALUES.get(piece_type, 0.0)
+
+            if piece.color == chess.WHITE:
+                planes[piece_idx, rank, file] = 1
+                white_material += piece_value
+            else: # piece.color == chess.BLACK
+                planes[piece_idx + 6, rank, file] = 1 # Offset index for black
+                black_material += piece_value
+
+        # Turn plane
         if board.turn == chess.WHITE:
             planes[12].fill(1)
 
-        # Planes 13-16: Castling rights
-        planes[13].fill(1 if board.has_kingside_castling_rights(chess.WHITE) else 0)
-        planes[14].fill(1 if board.has_queenside_castling_rights(chess.WHITE) else 0)
-        planes[15].fill(1 if board.has_kingside_castling_rights(chess.BLACK) else 0)
-        planes[16].fill(1 if board.has_queenside_castling_rights(chess.BLACK) else 0)
+        # Castling planes
+        if board.has_kingside_castling_rights(chess.WHITE): planes[13].fill(1)
+        if board.has_queenside_castling_rights(chess.WHITE): planes[14].fill(1)
+        if board.has_kingside_castling_rights(chess.BLACK): planes[15].fill(1)
+        if board.has_queenside_castling_rights(chess.BLACK): planes[16].fill(1)
 
-        # Plane 17: Material balance (scaled to 0-255)
-        piece_values = {
-            chess.PAWN: 1.0, chess.KNIGHT: 3.0, chess.BISHOP: 3.0,
-            chess.ROOK: 5.0, chess.QUEEN: 9.0, chess.KING: 0.0
-        }
-
-        white_material = sum(piece_values[p.piece_type] for sq, p in board.piece_map().items() 
-                            if p.color == chess.WHITE)
-        black_material = sum(piece_values[p.piece_type] for sq, p in board.piece_map().items() 
-                            if p.color == chess.BLACK)
-
+        # Material balance plane calculation
         total_material = white_material + black_material
         if total_material > 0:
-            white_ratio = white_material / total_material
-            planes[17].fill(int(white_ratio * 255))
+            # Calculate ratio as float, then scaled and casted to int for uint8 plane
+            white_ratio_scaled = int((white_material / total_material) * 255.0)
+             # Value is clamped to [0, 255] just in case
+            planes[17].fill(max(0, min(255, white_ratio_scaled)))
         else:
-            planes[17].fill(128)  # Equal material
+            planes[17].fill(128) # If no material - neutral value
 
         return planes
 
@@ -67,7 +77,7 @@ class ChessEncoder:
         return base_idx + promo_offset[move.promotion]
     
     @staticmethod
-    def decode_move(move_idx):
+    def decode_move(move_idx): # TODO - fix incorrect decoding(?)
         """Decode a move index back to a chess.Move object."""
         from_square = move_idx // 69
         to_square = move_idx % 69

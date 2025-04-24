@@ -20,7 +20,6 @@ if __name__ == "__main__":
     '''
     
     # TODO - look at ways to improve game encoding
-    # TODO - pre-encode and save games to remove redundant processing
     
     # Define the model var
     model = None
@@ -32,15 +31,25 @@ if __name__ == "__main__":
         if userInput.isdigit():
             if int(userInput) == 1:
                 # Train from existing games
-                PGN_PATH = os.getenv("PGN_PATH") # Get PGN path from environment variable - points to game file
-                sampler = PGNReader(PGN_PATH)
+                print("\n--- Training from HDF5 ---")
+                GAMES_PATH = os.getenv("GAMES_PATH")
+                if not GAMES_PATH or not os.path.isdir(GAMES_PATH):
+                    print(f"Error: GAMES_PATH '{GAMES_PATH}' not found or not set in .env")
+                    continue
+
+                #positions_path, moves_path, values_path = sampler.preprocess_games(150000, 12, 2000)
                 
-                # TODO - Chunk files, place in GAMES_PATH
-                positions_path, moves_path, values_path = sampler.preprocess_games(150000, 12, 2000)
+                available_hdf5 = [f for f in os.listdir(GAMES_PATH) if f.endswith(".hdf5")]
+                if not available_hdf5:
+                    print(f"No HDF5 files found in {GAMES_PATH}")
+                    continue
+
+                print("Available HDF5 files:")
+                for i, fname in enumerate(available_hdf5):
+                    print(f"{i+1}. {fname}")
+                file_choice = int(input("Select HDF5 file to train from: ")) - 1
                 
-                # Close the file, release resources - sampler not needed after game pre-processing
-                del sampler
-                gc.collect()
+                hdf5_file_path = os.path.join(GAMES_PATH, available_hdf5[file_choice])
                 
                 ''' 
                 3. Train the models
@@ -48,19 +57,14 @@ if __name__ == "__main__":
                 3.2. Learns from self-play
                 '''
                 
-                # TODO - use numpy.load for memmap file loading mmap_mode='r' for batch processing and reading into memory
-                # TODO - filter out games with low ELO ratings
-                
                 trainingStart = time.time()
                 # 3.1
                 # Train the model
                 model = train_model(
-                    positions=positions_path,
-                    moves=moves_path,
-                    values=values_path,
+                    data_path=hdf5_file_path,
                     epochs=10,
-                    batch_size=4096,
-                    learning_rate=1e-3,
+                    chunks_per_batch=2,
+                    learning_rate=0.5e-3,
                     val_split=0.1,
                 )
                 
