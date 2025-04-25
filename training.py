@@ -96,7 +96,7 @@ def train_model(data_path, epochs=100,
     model = ChessNN(input_channels=input_channels, learning_rate=learning_rate)
 
     # --- Setup Training ---
-    output_dir = ".temp_model_checkpoints_chunked"
+    output_dir = ".temp_model"
     os.makedirs(output_dir, exist_ok=True)
 
     # Callbacks (monitoring validation accuracy))
@@ -136,7 +136,16 @@ def train_model(data_path, epochs=100,
         traceback.print_exc()
         # Clean up on error
         import shutil
-        shutil.rmtree(output_dir, ignore_errors=True)
+        
+        # Ask user remove temp dir
+        print(f"Remove temporary directory: {output_dir}? (y/n)")
+        user_input = input().strip().lower()
+        
+        if user_input == 'y':
+            shutil.rmtree(output_dir, ignore_errors=True)
+            print(f"Temporary directory {output_dir} removed.")
+        else:
+            print(f"Temporary directory {output_dir} kept intact.")
         return None
 
     # --- Load Best Model found during training ---
