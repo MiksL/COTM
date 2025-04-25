@@ -1,37 +1,29 @@
 import os
 import torch
 import traceback
-
 from training import train_model
-# TODO: Improve playGame.py - implement inference usage
-from playGame import play_human_vs_engine, play_engine_vs_engine
-
+from playGame import play_human_vs_engine, play_engine_vs_engine, play_raw_vs_mcts, RawNNEngine, MCTSEngine
 from readGames import PGNReader
 from dotenv import load_dotenv
-
 import gc
-
 import time
 
 if __name__ == "__main__":
-    ''' 
-    1. Read existing games to be used for training
-    2. Turn games into usable data - board state encoding 
-    '''
-    
-    # TODO - look at ways to improve game encoding
-    # TODO - pre-encode and save games to remove redundant processing
-    
-    # Define the model var
-    model = None
-    
-    # userInput loop
+    load_dotenv()
+
     while True:
-        # user input to train an existing game/self-play model or load a pre-trained model from the models directory
-        userInput = input("1. Train from existing games\n2. Train from self-play\n3. Load a pre-trained model\n")
-        if userInput.isdigit():
-            if int(userInput) == 1:
-                # Train from existing games
+        print("1. Train model from PGN")
+        print("2. Train model from self-play (Not Implemented)")
+        print("3. Play using a pre-trained model")
+        userInput = input("Enter choice (or q to quit): ")
+
+        if userInput.lower() == 'q': break
+        if not userInput.isdigit(): print("Invalid input."); continue
+        choice = int(userInput)
+
+        # --- Train ---
+        if choice == 1:
+            # Train from existing games
                 PGN_PATH = os.getenv("PGN_PATH") # Get PGN path from environment variable - points to game file
                 sampler = PGNReader(PGN_PATH)
                 
@@ -89,8 +81,10 @@ if __name__ == "__main__":
                 else:
                     pass
 
-            elif int(userInput) == 2:
-                # Train from self-play
+
+        # --- Self Play ---
+        elif choice == 2:
+            # Train from self-play
                 print("Training from self-play")
                 
                 from neuralNetworkSP import SelfPlayChess, ChessNN, ChessEncoder, train
@@ -114,135 +108,115 @@ if __name__ == "__main__":
                     pass
                 else:
                     pass
-                
-                
-            elif int(userInput) == 3:
-                models_choice = input("Load 1 model (play against) or 2 models (engine vs engine)? (1/2): ")
 
-                if models_choice.isdigit():
-                    num_models_to_load = int(models_choice)
+        # --- Load Model & Play ---
+        elif choice == 3:
+            print("\n--- Load Model & Play ---")
+            print("1. Play against engine (Human vs MCTS Engine)")
+            print("2. Watch engines play (MCTS Engine vs MCTS Engine)")
+            print("3. Compare Raw NN vs MCTS Engine (using same model)") 
+            models_choice = input("Enter choice: ")
 
-                    # List available models in the directory
-                    try:
-                        model_dir = "models"
-                        if not os.path.isdir(model_dir):
-                            print(f"Directory '{model_dir}' not found.")
-                            input("Press Enter to continue...")
-                            continue
+            if not models_choice.isdigit(): print("Invalid choice."); continue
+            play_mode = int(models_choice)
+            if play_mode not in [1, 2, 3]: print("Invalid choice."); continue 
 
-                        available_models = [model for model in os.listdir(model_dir) if model.endswith(".pth")]
-                        if not available_models:
-                            print(f"Error: No models found in '{model_dir}'.")
-                            input("Press Enter to continue...")
-                            continue
+            # --- List Models ---
+            try:
+                model_dir = "models"
+                if not os.path.isdir(model_dir): print(f"Directory '{model_dir}' not found."); input("Press Enter..."); continue
+                available_models = sorted([m for m in os.listdir(model_dir) if m.endswith(".pth")])
+                if not available_models: print(f"Error: No models (.pth files) found in '{model_dir}'."); input("Press Enter..."); continue
+                print("\nAvailable models:")
+                for i, model_name in enumerate(available_models): print(f"{i+1}. {model_name}")
+            except Exception as e: print(f"Error listing models: {e}"); input("Press Enter..."); continue
 
-                        print("\nAvailable models:")
-                        for i, model_name in enumerate(available_models):
-                            print(f"{i+1}. {model_name}")
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu"); print(f"\nUsing device: {device}")
 
-                    except Exception as e:
-                        print(f"Error listing models: {e}")
-                        input("Press Enter to continue...")
-                        continue
+            # --- Get MCTS Simulation Count ---
+            # Moved outside specific modes as it's needed for modes 1, 2, and 3 (for the MCTS side)
+            try:
+                sims_str = input(f"Enter MCTS simulations per move for MCTS engine(s) (e.g., 100-1600+): ")
+                num_simulations = int(sims_str)
+                if num_simulations <= 0: raise ValueError("Simulations must be positive.")
+            except ValueError: print("Invalid number, using default 400 simulations."); num_simulations = 400
 
-                    # Using CUDA for inference if available
-                    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                    print(f"\nUsing device: {device}")
+            # --- Ask about Stockfish ---
+            use_sf = input("Use Stockfish for evaluation comparison? (y/n): ").lower() == 'y'
 
-                    # --- Load 1 Model ---
-                    if num_models_to_load == 1:
-                        try:
-                            modelIndex = int(input("Model to play against: ")) - 1
-                            if not 0 <= modelIndex < len(available_models):
-                                print("Invalid model")
-                                continue
+            # --- Mode 1: Human vs Engine ---
+            if play_mode == 1:
+                try:
+                    modelIndex = int(input("Select model to play against (enter number): ")) - 1
+                    if not 0 <= modelIndex < len(available_models): print("Invalid model number."); continue
+                    selected_model_name = available_models[modelIndex]
+                    model_path = os.path.join(model_dir, selected_model_name)
+                    print(f"Loading model: {selected_model_name}...")
+                    model_state_dict = torch.load(model_path, map_location=device)
+                    print("Model state loaded.")
+                    play_human_vs_engine(model_state_dict, num_simulations, use_stockfish=use_sf)
+                # ... (Error handling) ...
+                except (ValueError, IndexError): print("Invalid input.")
+                except FileNotFoundError: print(f"Error: Model file not found '{model_path}'.")
+                except Exception as e: print(f"Unexpected error setting up game: {e}"); traceback.print_exc(); input("\nPress Enter...")
 
-                            selected_model_name = available_models[modelIndex]
-                            model_path = os.path.join(model_dir, selected_model_name)
+            # --- Mode 2: Engine vs Engine ---
+            elif play_mode == 2:
+                try:
+                    modelIndex1 = int(input("Select model 1 (White, enter number): ")) - 1
+                    modelIndex2 = int(input("Select model 2 (Black, enter number): ")) - 1
+                    if not (0 <= modelIndex1 < len(available_models) and 0 <= modelIndex2 < len(available_models)): print("Invalid model number."); continue
 
-                            print(f"Loading model: {selected_model_name}...")
-                            # Load state dictionary to device
-                            model_state_dict = torch.load(model_path, map_location=device)
+                    model1_name = available_models[modelIndex1]
+                    model2_name = available_models[modelIndex2]
+                    model1_path = os.path.join(model_dir, model1_name)
+                    model2_path = os.path.join(model_dir, model2_name)
+                    print(f"Model 1 (W): {model1_name} | Model 2 (B): {model2_name}")
+                    if modelIndex1 == modelIndex2: print("Note: Selected models are the same.")
 
-                            think_time_str = input("Enter engine think time per move in seconds (eg, 2.0/5.4): ")
-                            try:
-                                think_time = float(think_time_str)
-                            except ValueError:
-                                print("Invalid time, using 2.0s")
-                                think_time = 2.0
+                    print(f"Loading model 1 state_dict..."); state_dict1 = torch.load(model1_path, map_location=device)
+                    print(f"Loading model 2 state_dict..."); state_dict2 = torch.load(model2_path, map_location=device)
+                    print("Model states loaded.")
 
-                            # --- Call game method for playGame ---
-                            play_human_vs_engine(model_state_dict, think_time)
+                    pause = input("Pause after each move? (y/n): ").lower() == 'y'
+                    play_engine_vs_engine(state_dict1, state_dict2, num_simulations,
+                                          use_stockfish=use_sf, pause_after_move=pause,
+                                          model1_name=model1_name, model2_name=model2_name)
+                # ... (Error handling) ...
+                except (ValueError, IndexError): print("Invalid input.")
+                except FileNotFoundError: print(f"Error: Model file not found.")
+                except Exception as e: print(f"Unexpected error setting up game: {e}"); traceback.print_exc(); input("\nPress Enter...")
 
-                        # Error handling
-                        except ValueError:
-                            print("Invalid input.")
-                        except IndexError:
-                            print("Invalid model number selected.")
-                        except FileNotFoundError:
-                            print(f"Error: Model file not found '{model_path}'.")
-                        except Exception as e:
-                            print(f"Unexpected error: {e}")
-                            traceback.print_exc()
-                            input("\nPress Enter to continue...")
+            # --- Mode 3: Raw NN vs MCTS ---
+            elif play_mode == 3:
+                try:
+                    modelIndex = int(input("Select ONE model for both players (enter number): ")) - 1
+                    if not 0 <= modelIndex < len(available_models): print("Invalid model number."); continue
 
+                    selected_model_name = available_models[modelIndex]
+                    model_path = os.path.join(model_dir, selected_model_name)
+                    print(f"Loading model: {selected_model_name}...")
+                    model_state_dict = torch.load(model_path, map_location=device) # Load only one state dict
+                    print("Model state loaded.")
 
-                    # --- Load 2 Models (Engine vs Engine) ---
-                    elif num_models_to_load == 2:
-                        try:
-                            modelIndex1 = int(input("Select model 1 (White, enter number): ")) - 1
-                            modelIndex2 = int(input("Select model 2 (Black, enter number): ")) - 1
+                    # Ask which player uses Raw NN
+                    raw_white_choice = input("Should Raw NN play as White? (y/n): ").lower()
+                    raw_plays_white = (raw_white_choice == 'y')
 
-                            if not (0 <= modelIndex1 < len(available_models) and 0 <= modelIndex2 < len(available_models)):
-                                print("Invalid model number")
-                                continue
-                            if modelIndex1 == modelIndex2:
-                                print("Selected models are the same")
+                    pause = input("Pause after each move? (y/n): ").lower() == 'y'
 
-                            model1_name = available_models[modelIndex1]
-                            model2_name = available_models[modelIndex2]
-                            model1_path = os.path.join(model_dir, model1_name)
-                            model2_path = os.path.join(model_dir, model2_name)
+                    # Call the NEW game function
+                    play_raw_vs_mcts(model_state_dict, num_simulations,
+                                     raw_plays_white=raw_plays_white,
+                                     use_stockfish=use_sf,
+                                     pause_after_move=pause,
+                                     model_name=selected_model_name)
 
-                            # --- Load State Dicts ---
-                            print(f"Loading model 1 (White): {model1_name}...")
-                            state_dict1 = torch.load(model1_path, map_location=device)
+                except (ValueError, IndexError): print("Invalid input.")
+                except FileNotFoundError: print(f"Error: Model file not found '{model_path}'.")
+                except Exception as e: print(f"Unexpected error setting up game: {e}"); traceback.print_exc(); input("\nPress Enter...")
 
-                            print(f"Loading model 2 (Black): {model2_name}...")
-                            state_dict2 = torch.load(model2_path, map_location=device)
+        else:
+             print("Invalid input. Please enter a valid choice number or 'q'.")
 
-                            # --- Get Think Time ---
-                            think_time_str = input("Enter think time per move for both engines (seconds, e.g., 1.0): ")
-                            try:
-                                think_time = float(think_time_str)
-                            except ValueError:
-                                print("Invalid time, using 1.0s")
-                                think_time = 1.0
-
-                            # --- Call the game function from playGame ---
-                            play_engine_vs_engine(state_dict1, state_dict2, think_time, True, False, model1_name, model2_name)
-                            # --- Function call finished, loop continues ---
-
-                        # Error handling
-                        except ValueError:
-                            print("Invalid input.")
-                        except IndexError:
-                            print("Invalid model number selected.")
-                        except FileNotFoundError as e:
-                            print(f"Error: Model file not found '{model1_path}' and/or '{model2_path}'.")
-                        except Exception as e:
-                            print(f"Unexpected error: {e}")
-                            traceback.print_exc()
-                            input("\nPress Enter to continue...")
-
-                    else:
-                        print("Invalid choice. Please enter 1 or 2.")
-
-                else:
-                    print("Invalid input. Please enter 1 or 2.")
-        # TODO
-        ''' 4. Create and save a UCI interface for the model '''
-    
-    
-    
-    
+    print("\nExiting program.")

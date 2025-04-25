@@ -164,3 +164,11 @@ lightning_logs/
 
 # Ignore temp_model directory
 .temp_model/
+saved_engine_games/
+saved_comparison_games/
+
+# Ignore possible Stockfish files
+stockfish*
+
+# Ignore identifier files 
+*.Identifier
