@@ -5,6 +5,7 @@ import traceback
 from training import train_model
 # TODO: Improve playGame.py - implement inference usage
 from playGame import play_human_vs_engine, play_engine_vs_engine
+from selfPlay import SelfPlayChess
 
 from readGames import PGNReader
 from dotenv import load_dotenv
@@ -62,7 +63,7 @@ if __name__ == "__main__":
                 # Train the model
                 model = train_model(
                     data_path=hdf5_file_path,
-                    epochs=10,
+                    epochs=25,
                     chunks_per_batch=2,
                     learning_rate=0.5e-3,
                     val_split=0.1,
@@ -96,19 +97,23 @@ if __name__ == "__main__":
             elif int(userInput) == 2:
                 # Train from self-play
                 print("Training from self-play")
-                
-                from neuralNetworkSP import SelfPlayChess, ChessNN, ChessEncoder, train
+
+                from neuralNetwork import ChessNN
+                from encoding import ChessEncoder
+                from selfPlay import SelfPlayChess
+                from training import train_sp
                 
                 # Example usage
                 model = ChessNN()
-                encoder = ChessEncoder()
+                encoder = ChessEncoder() # TODO: Fix usage of new encoder - precomputed map not found
 
                 # Run self-play to generate training data
                 self_play = SelfPlayChess(model, encoder, 100)
                 dataset = self_play.run_self_play()
+                
 
                 # Train the model using the generated dataset
-                train(model, dataset, epochs=10, batch_size=1024, learning_rate=1e-3)
+                train_sp(model, dataset, epochs=10, batch_size=1024, learning_rate=1e-3)
                 
                 # Prompt user to save the model
                 saveModel = input("Save the model? (y/n)")

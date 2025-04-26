@@ -4,6 +4,9 @@ from torch.utils.data import DataLoader
 import numpy as np
 import os
 import random
+import torch
+import torch.nn as nn
+import tqdm
 
 # Importing hdfDataset and methods
 from hdfDataset import ChunkedHDF5Dataset, hdf5_worker_init, chunked_collate, ChunkSampler
@@ -168,3 +171,76 @@ def train_model(data_path, epochs=100,
     print("Cleaned up temporary chunked checkpoint directory.")
 
     return best_model
+
+
+def train_sp(model, dataset, epochs=10, batch_size=64, learning_rate=1e-3):
+    """Optimized training using GPU"""
+    # Move model to GPU for training if available
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    model = model.to(device)
+    model.train()
+    
+    dataloader = DataLoader(
+        dataset, 
+        batch_size=batch_size, 
+        shuffle=True,
+        num_workers=4,  # Use multiple workers for data loading
+        pin_memory=(device=='cuda')
+    )
+    
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=1e-4)
+    criterion_policy = nn.CrossEntropyLoss()
+    criterion_value = nn.MSELoss()
+    
+    # Learning rate scheduler
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, patience=2, factor=0.5
+    )
+    
+    for epoch in range(epochs):
+        total_loss = 0
+        total_policy_loss = 0
+        total_value_loss = 0
+        total_batches = 0
+        
+        for batch in tqdm(dataloader, desc=f"Training Epoch {epoch+1}/{epochs}"):
+            positions, move_indices, values = batch
+            
+            # Move data to the same device as the model
+            positions = positions.to(device).float()
+            move_indices = move_indices.to(device).long()
+            values = values.to(device).float()
+            
+            optimizer.zero_grad()
+            
+            # Forward pass
+            policy_out, value_out = model(positions)
+            
+            # Calculate losses
+            policy_loss = criterion_policy(policy_out, move_indices)
+            value_loss = criterion_value(value_out, values)
+            loss = policy_loss + 0.5 * value_loss
+            
+            # Backward pass
+            loss.backward()
+            optimizer.step()
+            
+            # Track metrics
+            total_loss += loss.item()
+            total_policy_loss += policy_loss.item()
+            total_value_loss += value_loss.item()
+            total_batches += 1
+        
+        # Calculate average losses
+        avg_loss = total_loss / total_batches
+        avg_policy_loss = total_policy_loss / total_batches
+        avg_value_loss = total_value_loss / total_batches
+        
+        # Update learning rate based on loss
+        scheduler.step(avg_loss)
+        
+        print(f"Epoch {epoch+1}/{epochs}:")
+        print(f"  Loss: {avg_loss:.4f} (Policy: {avg_policy_loss:.4f}, Value: {avg_value_loss:.4f})")
+        print(f"  Learning Rate: {optimizer.param_groups[0]['lr']:.6f}")
+    
+    return model
