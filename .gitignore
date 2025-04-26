@@ -172,3 +172,6 @@ stockfish*
 
 # Ignore identifier files 
 *.Identifier
+
+# Ignore pgn files
+*.pgn
