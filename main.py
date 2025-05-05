@@ -104,8 +104,7 @@ if __name__ == "__main__":
 
             from core.encoding import ChessEncoder
             from neural_network.neuralNetworkSP import MCTSChessNN
-            from self_play.datasetSP import ChessSPDataset
-            from training import run_mcts_training_loop
+            from training.training import run_mcts_training_loop
             
             import cProfile
             import pstats
