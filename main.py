@@ -1,11 +1,8 @@
 import os
 import torch
 import traceback
-from training import train_model
-from playGame import play_human_vs_engine, play_engine_vs_engine, play_raw_vs_mcts, RawNNEngine, MCTSEngine
-from selfPlay import SelfPlayChess
-
-from readGames import PGNReader
+from training.training import train_model
+from playGame import play_human_vs_engine, play_engine_vs_engine, play_raw_vs_mcts
 from dotenv import load_dotenv
 import gc
 import time
@@ -66,8 +63,8 @@ if __name__ == "__main__":
             # Train the model
             model = train_model(
                 data_path=hdf5_file_path,
-                epochs=25,
-                chunks_per_batch=2,
+                epochs=10,
+                chunks_per_batch=4,
                 learning_rate=0.5e-3,
                 val_split=0.1,
             )
@@ -99,34 +96,81 @@ if __name__ == "__main__":
         # --- Self Play ---
         elif choice == 2:
             # Train from self-play
-                print("Training from self-play")
+            print("Training from self-play")
+            
+            import torch
+            import os
+            import time
 
-                from neuralNetwork import ChessNN
-                from encoding import ChessEncoder
-                from selfPlay import SelfPlayChess
-                from training import train_sp
+            from core.encoding import ChessEncoder
+            from neural_network.neuralNetworkSP import MCTSChessNN
+            from self_play.datasetSP import ChessSPDataset
+            from training import run_mcts_training_loop
+            
+            import cProfile
+            import pstats
                 
-                # Example usage
-                model = ChessNN()
-                encoder = ChessEncoder() # TODO: Fix usage of new encoder - precomputed map not found
+            # --- Configuration ---
+            NUM_TRAINING_ITERATIONS = 15
+            GAMES_PER_ITERATION = 200
+            EPOCHS_PER_ITERATION = 10
+            MCTS_SIMULATIONS = 30
+            BATCH_SIZE = 64
+            LEARNING_RATE = 2e-4
+            CHECKPOINT_DIR = "mcts_sp_checkpoints"
+            MODEL_DIR = "models"
+            FINAL_MODEL_FILENAME = "MCTS_SelfPlay_Bot.pth"
+            ITERATION_PREFIX = "mcts_iter"
+            START_ITERATION = 0 # Set > 0 to resume loop
 
-                # Run self-play to generate training data
-                self_play = SelfPlayChess(model, encoder, 100)
-                dataset = self_play.run_self_play()
-                
+            # --- Initialize Model and Encoder ---
+            encoder = ChessEncoder()
+            policy_size = encoder.num_possible_moves # Or 4416 if NN is fixed
 
-                # Train the model using the generated dataset
-                train_sp(model, dataset, epochs=10, batch_size=1024, learning_rate=1e-3)
-                
-                # Prompt user to save the model
-                saveModel = input("Save the model? (y/n)")
-                if saveModel.lower() == 'y':
-                    # Save the model in the models directory
-                    torch.save(model.state_dict(), "models/TestBotSP.pth")
-                    pass
+            # *** Instantiate the MCTS model ***
+            # This model instance will be updated by the training loop function
+            initial_model = MCTSChessNN(policy_output_size=policy_size, learning_rate=LEARNING_RATE)
+            # OR: initial_model = MCTSChessNNWithTime(...)
+
+            profiler = cProfile.Profile()
+            profiler.enable()
+            # --- Run the Training Loop ---
+            # The logic is now inside run_mcts_training_loop
+            final_model = run_mcts_training_loop(
+                num_iterations=NUM_TRAINING_ITERATIONS,
+                games_per_iteration=GAMES_PER_ITERATION,
+                epochs_per_iteration=EPOCHS_PER_ITERATION,
+                mcts_simulations=MCTS_SIMULATIONS,
+                batch_size=BATCH_SIZE,
+                learning_rate=LEARNING_RATE,
+                checkpoint_dir=CHECKPOINT_DIR,
+                iteration_prefix=ITERATION_PREFIX,
+                start_iteration=START_ITERATION,
+                initial_model=initial_model, # Pass the model object
+                encoder=encoder,
+                # policy_size=policy_size # Optional if needed inside loop func
+            )
+            profiler.disable()
+            stats = pstats.Stats(profiler).sort_stats('cumulative')
+            stats.print_stats(100)
+
+            # --- Save Final Model ---
+            # The loop function returns the trained model object
+            if final_model:
+                final_save_path = os.path.join(MODEL_DIR, FINAL_MODEL_FILENAME)
+                save_final = input(f"Save final model state_dict to '{final_save_path}'? (y/n): ")
+                if save_final.lower() == 'y':
+                    try:
+                        os.makedirs(MODEL_DIR, exist_ok=True)
+                        torch.save(final_model.state_dict(), final_save_path)
+                        print(f"Final model state_dict saved.")
+                    except Exception as e:
+                        print(f"Error saving final model: {e}")
                 else:
-                    pass
-
+                    print("Final model not saved.")
+            else:
+                 print("Training loop did not return a final model.")
+                 
         # --- Load Model & Play ---
         elif choice == 3:
             print("\n--- Load Model & Play ---")
@@ -235,6 +279,6 @@ if __name__ == "__main__":
                 except Exception as e: print(f"Unexpected error setting up game: {e}"); traceback.print_exc(); input("\nPress Enter...")
 
         else:
-             print("Invalid input. Please enter a valid choice number or 'q'.")
+            print("Invalid input. Please enter a valid choice number or 'q'.")
 
     print("\nExiting program.")
