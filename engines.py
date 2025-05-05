@@ -96,8 +96,8 @@ class RawNNEngine:
                 # Apply softmax to get probabilities
                 policy_probs = F.softmax(policy_logits_tensor, dim=1).squeeze().cpu().numpy()
                 policy_size = policy_probs.shape[0]
-                if policy_size != 4416:
-                    raise ValueError(f"Raw NN: Policy output size mismatch ({policy_size} vs 4416)")
+                #if policy_size != 1968:
+                    #raise ValueError(f"Raw NN: Policy output size mismatch ({policy_size} vs 1968)")
                 
                 # Get legal moves
                 legal_moves = list(board.legal_moves)
@@ -230,8 +230,8 @@ class MCTSEngine:
                 policy_logits_tensor, _ = self.model(board_tensor)
                 policy_probs = F.softmax(policy_logits_tensor, dim=1).squeeze().cpu().numpy()
                 policy_size = policy_probs.shape[0]
-                if policy_size != 4416:
-                    raise ValueError(f"Raw NN: Policy output size mismatch ({policy_size})")
+                #if policy_size != 4416:
+                    #raise ValueError(f"Raw NN: Policy output size mismatch ({policy_size})")
 
                 legal_moves = list(board.legal_moves)
                 best_prob = -1.0

@@ -125,14 +125,14 @@ class ChessEncoder:
                     else:
                         break # Stop sliding in this direction if off board
 
-            # --- Generate King Moves (Non-Castling) ---
+            # King non-castling moves
             for dr, df in directions: # Use all 8 directions for step=1
                  to_rank, to_file = from_rank + dr, from_file + df
                  if 0 <= to_rank < 8 and 0 <= to_file < 8: # Check bounds
                      to_sq = chess.square(to_file, to_rank)
                      self._add_move(move_set, chess.Move(from_sq, to_sq))
 
-        # --- Add Castling Moves Explicitly ---
+        # Castling
         # King E1 moves
         self._add_move(move_set, chess.Move(chess.E1, chess.G1)) # White O-O
         self._add_move(move_set, chess.Move(chess.E1, chess.C1)) # White O-O-O
@@ -140,8 +140,7 @@ class ChessEncoder:
         self._add_move(move_set, chess.Move(chess.E8, chess.G8)) # Black O-O
         self._add_move(move_set, chess.Move(chess.E8, chess.C8)) # Black O-O-O
 
-        # --- Finalize ---
-        # Sort for consistency - IMPORTANT for stable model training/use
+        # Sort for consistency
         self.all_possible_moves = sorted(list(move_set), key=lambda m: (m.from_square, m.to_square, m.promotion or 0))
         self.move_to_index = {move: idx for idx, move in enumerate(self.all_possible_moves)}
 

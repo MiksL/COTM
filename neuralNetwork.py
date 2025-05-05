@@ -19,19 +19,28 @@ class ChessNN(pl.LightningModule):
         
         # 2 Residual blocks - TODO: test increased number block effect on training speed and performance
         self.res_blocks = nn.ModuleList([
-            self._make_res_block(128) for _ in range(10)
+            self._make_res_block(128) for _ in range(20)
         ])
         
         # Policy head
         self.policy_conv = nn.Conv2d(128, 32, 1)
-        self.policy_head = nn.Linear(32 * 64, 64 * 69)
+        self.policy_head = nn.Linear(32 * 64, 1968)
+        #self.policy_head = nn.Linear(32 * 64, 1968) # Convert to new encoding - 1968 moves
         
         # Value head
-        self.value_conv = nn.Conv2d(128, 32, 1)
-        self.value_fc = nn.Linear(32 * 64, 1)
+        self.value_conv = nn.Conv2d(128, 64, 1)
+        self.value_flatten = nn.Flatten()
+        self.value_fc1 = nn.Linear(64 * 64, 512)
+        self.value_bn1 = nn.BatchNorm1d(512)
+        self.value_fc2 = nn.Linear(512, 256) 
+        self.value_bn2 = nn.BatchNorm1d(256)
+        self.value_fc3 = nn.Linear(256, 1)
         
         # Convert to channels_last memory format - better performance(?)
         self = self.to(memory_format=torch.channels_last)
+        
+        if hasattr(torch, 'compile'):
+            self = torch.compile(self, mode='max-autotune')
     
     # Residual block - 2 conv layers with batch norm and ReLU
     def _make_res_block(self, channels):
@@ -44,7 +53,10 @@ class ChessNN(pl.LightningModule):
         )
     
     def forward(self, x):
-        ''' Forward pass through the network '''	
+        ''' Forward pass through the network '''
+        
+        if x.is_cuda and x.dim() == 4:
+            x = x.to(memory_format=torch.channels_last)
         
         # Initial convolution - ReLU
         x = F.relu(self.conv_input(x))
@@ -61,7 +73,10 @@ class ChessNN(pl.LightningModule):
         
         # Value head
         value = F.relu(self.value_conv(x))
-        value = torch.tanh(self.value_fc(value.flatten(1)))
+        value = self.value_flatten(value)
+        value = F.relu(self.value_bn1(self.value_fc1(value)))
+        value = F.relu(self.value_bn2(self.value_fc2(value)))
+        value = torch.tanh(self.value_fc3(value))
         
         # Ensure value has shape (batch_size, 1)
         if value.dim() == 1:

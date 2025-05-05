@@ -257,9 +257,9 @@ def run_combined_preencoding_hdf5(pgn_path, output_hdf5_path,
                   total_games_in_range = end_game_idx - start_game_idx + 1
 
             pbar_read = tqdm(desc="Scanning Games", unit="game", smoothing=0.1)
-            # Process bar tracks games *processed* by workers, Write bar tracks *positions* written
             pbar_process = tqdm(total=total_games_in_range, desc="Processing Games", unit="game", disable=(total_games_in_range is None), smoothing=0.1)
             pbar_write = tqdm(desc="Writing Positions", unit="pos", smoothing=0.1)
+            skipped_parse_errors = 0 # Add counter for skipped games
 
             while True:
                 # --- Process Completed Futures ---
@@ -313,17 +313,32 @@ def run_combined_preencoding_hdf5(pgn_path, output_hdf5_path,
                 # Read next game
                 if total_games_read_count <= end_game_0idx:
                     game_start_offset = pgn_file.tell()
+                    game = None # Initialize game to None
                     try:
                         game = chess.pgn.read_game(pgn_file)
-                    except (ValueError, RuntimeError) as e:
-                        print(f"\nWarning: Skipping invalid game at offset ~{game_start_offset}. Error: {e}")
-                        # Recovery
+                    except (ValueError, RuntimeError, AttributeError) as e: # Catch parsing errors
+                        print(f"\nWarning: Skipping invalid game near offset ~{game_start_offset}. Error: {e}")
+                        skipped_parse_errors += 1
+                        # Try to recover by finding the next likely game start
                         try:
+                             current_pos = pgn_file.tell()
                              line = pgn_file.readline()
-                             while line and not line.strip().startswith('[Event "'):
-                                 if not line: break
+                             read_count = 0
+                             max_read = 1000 # Limit search to 1000 lines 
+                             while line and not line.strip().startswith('[Event "') and read_count < max_read:
+                                 if not line: break # EOF reached
                                  line = pgn_file.readline()
-                             continue
+                                 read_count += 1
+                             if line and line.strip().startswith('[Event "'):
+                                 # Found potential game, go back to start of game
+                                 pgn_file.seek(current_pos + pgn_file.tell() - len(line.encode('utf-8'))) # Approximate seek back
+                             elif not line: # EOF reached
+                                 print("\nEOF reached during error recovery.")
+                                 break # Exit loop
+                             else: # Recovery failed within line limit
+                                 print(f"\nFailed to recover stream after error near offset {game_start_offset}. Stopping.")
+                                 break # Exit loop
+
                         except Exception as seek_e:
                              print(f"\nError trying to recover PGN stream: {seek_e}. Stopping.")
                              break
@@ -337,7 +352,6 @@ def run_combined_preencoding_hdf5(pgn_path, output_hdf5_path,
                     if total_games_read_count >= start_game_0idx:
                         current_game_batch.append(game)
                         total_games_submitted_count += 1
-                    # Else: Game is before start index, skipped implicitly
 
                     total_games_read_count += 1
                     pbar_read.update(1)
@@ -375,6 +389,7 @@ def run_combined_preencoding_hdf5(pgn_path, output_hdf5_path,
             pbar_write.close()
             print("\nFinished reading PGN range and processing all batches.")
             print("Finalizing HDF5 file...")
+            print(f"Skipped {skipped_parse_errors} games due to parsing errors.") # Skipped games count with encountered parsing errors
             f_out.flush()
 
     except FileNotFoundError:
@@ -383,7 +398,7 @@ def run_combined_preencoding_hdf5(pgn_path, output_hdf5_path,
         print(f"\nAn unexpected error occurred during processing: {e}")
         traceback.print_exc()
     finally:
-        # --- Summary output after processing ---
+        # --- Summary after games have been processed ---
         end_time = time.time()
         duration = end_time - start_time
         print(f"\n--- Combined Pre-encoding Summary ---")
@@ -416,18 +431,18 @@ if __name__ == "__main__":
     if not stockfish_path_env: print("Warning: STOCKFISH_PATH not set. Live eval will be disabled if USE_SF_EVAL=True.")
 
     # Game Range to process
-    START_GAME_INDEX = 1
-    END_GAME_INDEX = 500_000
+    START_GAME_INDEX = 0
+    END_GAME_INDEX = 2500000
 
     # Output Filename
     range_str = f"{START_GAME_INDEX}-{END_GAME_INDEX}" if END_GAME_INDEX else f"{START_GAME_INDEX}-end"
-    output_hdf5_filename = f"Games_{range_str}.hdf5"
+    output_hdf5_filename = f"Games_EloF2000_TestFile_2.5mil_{range_str}.hdf5"
     output_hdf5_full_path = os.path.join(output_directory, output_hdf5_filename)
 
     # Processing parameters
-    NUM_WORKERS = max(1, mp.cpu_count() // 2 - 1) # Workers are lower for faster live SF eval
+    NUM_WORKERS = max(1, mp.cpu_count() // 2) # Workers are lower for faster live SF eval
     GAMES_PER_BATCH = 50                     # Smaller batches -> more frequent updates to HDF5
-    ELO_FLOOR = 1000
+    ELO_FLOOR = 2000
     USE_SF_EVAL = True
 
     # Stockfish Live Eval Config
