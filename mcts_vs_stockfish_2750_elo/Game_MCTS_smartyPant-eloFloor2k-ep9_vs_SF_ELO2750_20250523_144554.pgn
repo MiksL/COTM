@@ -1,0 +1,445 @@
+[Event "MCTS vs Stockfish (ELO 2750) Match"]
+[Site "Local Machine"]
+[Date "2025.05.23"]
+[Round "1"]
+[White "MCTS (smartyPant-eloFloor2k-ep9.pth)"]
+[Black "Stockfish_ELO2750"]
+[Result "1/2-1/2"]
+[MCTSSimulations "1200"]
+[StockfishELOPlayedAs "2750"]
+
+1. e4 { MCTS Visits: 709; Eval: 0.28 } 1... e5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.34 } 2. Nf3
+{ MCTS Visits: 996; Eval: 0.28 } 2... Nf6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.44 } 3. d4
+{ MCTS Visits: 775; Eval: 0.26 } 3... Nxe4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.29 } 4. Bd3
+{ MCTS Visits: 755; Eval: 0.34 } 4... Be7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.55 } 5. O-O
+{ MCTS Visits: 852; Eval: 0.42 } 5... d5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.44 } 6. Nxe5
+{ MCTS Visits: 1152; Eval: 0.38 } 6... Nc6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.58 } 7. c4
+{ MCTS Visits: 711; Eval: 0.20 } 7... O-O
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.64 } 8. cxd5
+{ MCTS Visits: 1156; Eval: 0.64 } 8... Nxe5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.68 } 9. dxe5
+{ MCTS Visits: 772; Eval: 0.00 } 9... Qxd5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.01 } 10. Qc2
+{ MCTS Visits: 626; Eval: -0.12 } 10... Nc5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.09 } 11. Bxh7+
+{ MCTS Visits: 1178; Eval: -0.12 } 11... Kh8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.09 } 12. Bf5
+{ MCTS Visits: 655; Eval: -0.12 } 12... Qxe5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.09 } 13. Bxc8
+{ MCTS Visits: 1177; Eval: -0.11 } 13... Bd6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.17 } 14. f4
+{ MCTS Visits: 1059; Eval: -0.09 } 14... Qd4+
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.07 } 15. Kh1
+{ MCTS Visits: 1172; Eval: -1.14 } 15... Raxc8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -1.06 } 16. Nc3
+{ MCTS Visits: 925; Eval: -1.20 } 16... Qd3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.73 } 17. Qf2
+{ MCTS Visits: 1086; Eval: -0.78 } 17... Rfe8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.90 } 18. Qh4+
+{ MCTS Visits: 635; Eval: -1.08 } 18... Qh7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.85 } 19. Qg3
+{ MCTS Visits: 640; Eval: -0.86 } 19... Qf5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.78 } 20. Bd2
+{ MCTS Visits: 809; Eval: -0.98 } 20... Rcd8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.89 } 21. Be3
+{ MCTS Visits: 701; Eval: -0.96 } 21... Bf8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.87 } 22. Bg1
+{ MCTS Visits: 272; Eval: -1.14 } 22... Kg8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -1.07 } 23. Qg5
+{ MCTS Visits: 633; Eval: -1.18 } 23... Qxg5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -1.12 } 24. fxg5
+{ MCTS Visits: 1199; Eval: -1.06 } 24... Nd3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.94 } 25. Nb5
+{ MCTS Visits: 357; Eval: -1.35 } 25... Re7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.77 } 26. Nxa7
+{ MCTS Visits: 924; Eval: -0.90 } 26... Re2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.44 } 27. Rad1
+{ MCTS Visits: 980; Eval: -0.95 } 27... Re5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.40 } 28. h4
+{ MCTS Visits: 842; Eval: -0.35 } 28... Red5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.27 } 29. Rd2
+{ MCTS Visits: 1051; Eval: -0.44 } 29... Bb4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.41 } 30. Re2
+{ MCTS Visits: 1107; Eval: -0.48 } 30... Bd6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.40 } 31. Bh2
+{ MCTS Visits: 1096; Eval: -0.73 } 31... Be5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.13 } 32. Bxe5
+{ MCTS Visits: 1051; Eval: -0.32 } 32... Rxe5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.09 } 33. Rxe5
+{ MCTS Visits: 1098; Eval: 0.00 } 33... Nxe5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.04 } 34. Nb5
+{ MCTS Visits: 1012; Eval: 0.01 } 34... c6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.23 } 35. Nc3
+{ MCTS Visits: 1147; Eval: 0.15 } 35... Rd2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.16 } 36. Re1
+{ MCTS Visits: 939; Eval: 0.11 } 36... Nd3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.12 } 37. Re8+
+{ MCTS Visits: 1100; Eval: 0.06 } 37... Kh7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.07 } 38. Re7
+{ MCTS Visits: 875; Eval: -0.02 } 38... Rxb2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 39. Rxf7
+{ MCTS Visits: 1088; Eval: -0.13 } 39... Rc2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.09 } 40. Ne4
+{ MCTS Visits: 1185; Eval: -0.08 } 40... Rc4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.05 } 41. Nd6
+{ MCTS Visits: 744; Eval: -0.07 } 41... Rxh4+
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.05 } 42. Kg1
+{ MCTS Visits: 1199; Eval: -0.08 } 42... Rd4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.01 } 43. Ne8
+{ MCTS Visits: 979; Eval: -0.02 } 43... Re4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.01 } 44. Nf6+
+{ MCTS Visits: 660; Eval: -0.06 } 44... Kg6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 45. Rxg7+
+{ MCTS Visits: 886; Eval: -0.05 } 45... Kxg7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.02 } 46. Nxe4
+{ MCTS Visits: 1198; Eval: 0.00 } 46... b6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.05 } 47. Kh2
+{ MCTS Visits: 573; Eval: -0.02 } 47... Kf7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.01 } 48. Kg3
+{ MCTS Visits: 1019; Eval: 0.00 } 48... Nb4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.09 } 49. a3
+{ MCTS Visits: 768; Eval: 0.13 } 49... Nc2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.14 } 50. a4
+{ MCTS Visits: 1124; Eval: 0.10 } 50... Ne3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.07 } 51. Kf3
+{ MCTS Visits: 556; Eval: 0.00 } 51... Nc4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 52. Nc3
+{ MCTS Visits: 668; Eval: 0.00 } 52... Nb2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 53. Ke4
+{ MCTS Visits: 659; Eval: 0.00 } 53... Kg7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 54. Kf5
+{ MCTS Visits: 586; Eval: 0.00 } 54... Nc4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 55. g4
+{ MCTS Visits: 592; Eval: -0.02 } 55... Ne3+
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 56. Ke6
+{ MCTS Visits: 614; Eval: -0.22 } 56... Kg6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.14 } 57. Kd7
+{ MCTS Visits: 614; Eval: -0.11 } 57... Nc4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.10 } 58. Kxc6
+{ MCTS Visits: 1147; Eval: -0.03 } 58... Kxg5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.34 } 59. Nd5
+{ MCTS Visits: 837; Eval: -0.03 } 59... Nb2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.01 } 60. Kb5
+{ MCTS Visits: 546; Eval: 0.00 } 60... Nxa4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 61. Kxa4
+{ MCTS Visits: 1146; Eval: -0.07 } 61... b5+
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: -0.08 } 62. Kb3
+{ MCTS Visits: 915; Eval: 0.00 } 62... Kxg4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 63. Nb4
+{ MCTS Visits: 884; Eval: 0.00 } 63... Kf4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 64. Kc3
+{ MCTS Visits: 469; Eval: 0.00 } 64... Kf5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 65. Kb3
+{ MCTS Visits: 617; Eval: 0.00 } 65... Kf6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 66. Kc3
+{ MCTS Visits: 687; Eval: 0.00 } 66... Ke7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 67. Kb3
+{ MCTS Visits: 511; Eval: 0.00 } 67... Kd7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 68. Kc3
+{ MCTS Visits: 427; Eval: 0.00 } 68... Ke6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 69. Kb3
+{ MCTS Visits: 756; Eval: 0.00 } 69... Kd6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 70. Kc3
+{ MCTS Visits: 535; Eval: 0.00 } 70... Ke7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 71. Kb3
+{ MCTS Visits: 511; Eval: 0.00 } 71... Kd6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 72. Kc3
+{ MCTS Visits: 535; Eval: 0.00 } 72... Ke7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 73. Kb3
+{ MCTS Visits: 511; Eval: 0.00 } 73... Kf7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 74. Kc3
+{ MCTS Visits: 484; Eval: 0.00 } 74... Kg8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 75. Kb3
+{ MCTS Visits: 467; Eval: 0.00 } 75... Kh7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 76. Kc2
+{ MCTS Visits: 545; Eval: 0.00 } 76... Kg8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 77. Kb2
+{ MCTS Visits: 275; Eval: 0.00 } 77... Kh7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 78. Kc1
+{ MCTS Visits: 318; Eval: 0.00 } 78... Kg7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 79. Kb2
+{ MCTS Visits: 384; Eval: 0.00 } 79... Kf6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 80. Kc3
+{ MCTS Visits: 370; Eval: 0.00 } 80... Ke7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 81. Kb3
+{ MCTS Visits: 562; Eval: 0.00 } 81... Kf6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 82. Kc2
+{ MCTS Visits: 439; Eval: 0.00 } 82... Kg5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 83. Kb2
+{ MCTS Visits: 409; Eval: 0.00 } 83... Kg4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 84. Kb3
+{ MCTS Visits: 273; Eval: 0.00 } 84... Kg3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 85. Kc2
+{ MCTS Visits: 456; Eval: 0.00 } 85... Kh2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 86. Kd3
+{ MCTS Visits: 295; Eval: 0.00 } 86... Kh1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 87. Ke2
+{ MCTS Visits: 349; Eval: 0.00 } 87... Kg1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 88. Kf3
+{ MCTS Visits: 432; Eval: 0.00 } 88... Kf1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 89. Ke3
+{ MCTS Visits: 994; Eval: 0.00 } 89... Kg1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 90. Kf3
+{ MCTS Visits: 533; Eval: 0.00 } 90... Kh1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 91. Kg3
+{ MCTS Visits: 489; Eval: 0.00 } 91... Kg1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 92. Kf3
+{ MCTS Visits: 966; Eval: 0.00 } 92... Kf1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 93. Ke3
+{ MCTS Visits: 994; Eval: 0.00 } 93... Kg2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 94. Ke2
+{ MCTS Visits: 548; Eval: 0.00 } 94... Kh1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 95. Kf2
+{ MCTS Visits: 429; Eval: 0.00 } 95... Kh2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 96. Kf3
+{ MCTS Visits: 446; Eval: 0.00 } 96... Kh3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 97. Kf4
+{ MCTS Visits: 406; Eval: 0.00 } 97... Kh2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 98. Kf3
+{ MCTS Visits: 656; Eval: 0.00 } 98... Kh3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 99. Kf4
+{ MCTS Visits: 406; Eval: 0.00 } 99... Kg2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 100. Ke3
+{ MCTS Visits: 786; Eval: 0.00 } 100... Kh3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 101. Kd3
+{ MCTS Visits: 301; Eval: 0.00 } 101... Kg4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 102. Kc2
+{ MCTS Visits: 579; Eval: 0.00 } 102... Kf4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 103. Kc3
+{ MCTS Visits: 289; Eval: 0.00 } 103... Kf5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 104. Kb3
+{ MCTS Visits: 554; Eval: 0.00 } 104... Kg5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 105. Kc2
+{ MCTS Visits: 488; Eval: 0.00 } 105... Kf6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 106. Kd3
+{ MCTS Visits: 352; Eval: 0.00 } 106... Kg6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 107. Kc2
+{ MCTS Visits: 471; Eval: 0.00 } 107... Kh5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 108. Kb2
+{ MCTS Visits: 280; Eval: 0.00 } 108... Kg6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 109. Kc2
+{ MCTS Visits: 321; Eval: 0.00 } 109... Kf6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 110. Kd3
+{ MCTS Visits: 352; Eval: 0.00 } 110... Ke5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 111. Kc3
+{ MCTS Visits: 500; Eval: 0.00 } 111... Kf4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 112. Kb3
+{ MCTS Visits: 346; Eval: 0.00 } 112... Ke4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 113. Kc3
+{ MCTS Visits: 589; Eval: 0.00 } 113... Kf4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 114. Kb3
+{ MCTS Visits: 346; Eval: 0.00 } 114... Kg4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 115. Kc2
+{ MCTS Visits: 477; Eval: 0.00 } 115... Kg3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 116. Kb2
+{ MCTS Visits: 292; Eval: 0.00 } 116... Kh3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 117. Kb1
+{ MCTS Visits: 366; Eval: 0.00 } 117... Kg3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 118. Kc2
+{ MCTS Visits: 536; Eval: 0.00 } 118... Kh3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 119. Kd3
+{ MCTS Visits: 365; Eval: 0.00 } 119... Kg3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 120. Kc2
+{ MCTS Visits: 303; Eval: 0.00 } 120... Kh3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 121. Kd3
+{ MCTS Visits: 365; Eval: 0.00 } 121... Kg3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 122. Kc2
+{ MCTS Visits: 303; Eval: 0.00 } 122... Kh3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 123. Kd3
+{ MCTS Visits: 355; Eval: 0.00 } 123... Kg3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 124. Kd2
+{ MCTS Visits: 455; Eval: 0.00 } 124... Kh3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 125. Ke2
+{ MCTS Visits: 343; Eval: 0.00 } 125... Kh4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 126. Kd2
+{ MCTS Visits: 400; Eval: 0.00 } 126... Kh5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 127. Kc2
+{ MCTS Visits: 389; Eval: 0.00 } 127... Kg6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 128. Kb2
+{ MCTS Visits: 381; Eval: 0.00 } 128... Kg7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 129. Kb1
+{ MCTS Visits: 221; Eval: 0.00 } 129... Kh8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 130. Ka1
+{ MCTS Visits: 351; Eval: 0.00 } 130... Kg8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 131. Kb2
+{ MCTS Visits: 602; Eval: 0.00 } 131... Kh7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 132. Kb1
+{ MCTS Visits: 285; Eval: 0.00 } 132... Kh8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 133. Kc2
+{ MCTS Visits: 328; Eval: 0.00 } 133... Kh7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 134. Kb2
+{ MCTS Visits: 309; Eval: 0.00 } 134... Kg8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 135. Nd5
+{ MCTS Visits: 233; Eval: 0.00 } 135... b4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 136. Nf6+
+{ MCTS Visits: 570; Eval: 0.00 } 136... Kf7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 137. Nd5
+{ MCTS Visits: 323; Eval: 0.00 } 137... Kg6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 138. Ne7+
+{ MCTS Visits: 316; Eval: 0.00 } 138... Kh6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 139. Nf5+
+{ MCTS Visits: 738; Eval: 0.00 } 139... Kh7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 140. Kb3
+{ MCTS Visits: 307; Eval: 0.00 } 140... Kg8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 141. Nd6
+{ MCTS Visits: 438; Eval: 0.00 } 141... Kh8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 142. Kb2
+{ MCTS Visits: 397; Eval: 0.00 } 142... b3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 143. Nf7+
+{ MCTS Visits: 365; Eval: 0.00 } 143... Kg8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 144. Ne5
+{ MCTS Visits: 483; Eval: 0.00 } 144... Kh8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 145. Nd3
+{ MCTS Visits: 280; Eval: 0.00 } 145... Kh7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 146. Nf4
+{ MCTS Visits: 356; Eval: 0.00 } 146... Kh6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 147. Nd5
+{ MCTS Visits: 361; Eval: 0.00 } 147... Kh5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 148. Nc3
+{ MCTS Visits: 326; Eval: 0.00 } 148... Kh4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 149. Nd5
+{ MCTS Visits: 394; Eval: 0.00 } 149... Kg5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 150. Ne7
+{ MCTS Visits: 400; Eval: 0.00 } 150... Kg4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 151. Nd5
+{ MCTS Visits: 619; Eval: 0.00 } 151... Kh5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 152. Nc3
+{ MCTS Visits: 326; Eval: 0.00 } 152... Kh4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 153. Nd5
+{ MCTS Visits: 394; Eval: 0.00 } 153... Kg3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 154. Nc3
+{ MCTS Visits: 462; Eval: 0.00 } 154... Kh4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 155. Nd5
+{ MCTS Visits: 394; Eval: 0.00 } 155... Kg4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 156. Nc3
+{ MCTS Visits: 405; Eval: 0.00 } 156... Kh4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 157. Nd5
+{ MCTS Visits: 352; Eval: 0.00 } 157... Kh3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 158. Ne3
+{ MCTS Visits: 254; Eval: 0.00 } 158... Kh4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 159. Nf5+
+{ MCTS Visits: 473; Eval: 0.00 } 159... Kg5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 160. Ne3
+{ MCTS Visits: 468; Eval: 0.00 } 160... Kg6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 161. Nd5
+{ MCTS Visits: 569; Eval: 0.00 } 161... Kg5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 162. Ne7
+{ MCTS Visits: 385; Eval: 0.00 } 162... Kh6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 163. Nf5+
+{ MCTS Visits: 427; Eval: 0.00 } 163... Kh7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 164. Nd6
+{ MCTS Visits: 291; Eval: 0.00 } 164... Kh6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 165. Ne4
+{ MCTS Visits: 482; Eval: 0.00 } 165... Kg6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 166. Nf2
+{ MCTS Visits: 501; Eval: 0.00 } 166... Kf5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 167. Nd3
+{ MCTS Visits: 502; Eval: 0.00 } 167... Kg4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 168. Ne5+
+{ MCTS Visits: 528; Eval: 0.00 } 168... Kh3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 169. Nd3
+{ MCTS Visits: 379; Eval: 0.00 } 169... Kg3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 170. Ne5
+{ MCTS Visits: 411; Eval: 0.00 } 170... Kg2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 171. Nd3
+{ MCTS Visits: 428; Eval: 0.00 } 171... Kh1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 172. Nf4
+{ MCTS Visits: 297; Eval: 0.00 } 172... Kh2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 173. Ne2
+{ MCTS Visits: 486; Eval: 0.00 } 173... Kh1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 174. Nf4
+{ MCTS Visits: 444; Eval: 0.00 } 174... Kh2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 175. Ne2
+{ MCTS Visits: 486; Eval: 0.00 } 175... Kh3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 176. Nf4+
+{ MCTS Visits: 511; Eval: 0.00 } 176... Kg3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 177. Ne2+
+{ MCTS Visits: 345; Eval: 0.00 } 177... Kg2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 178. Nf4+
+{ MCTS Visits: 504; Eval: 0.00 } 178... Kf2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 179. Nd5
+{ MCTS Visits: 475; Eval: 0.00 } 179... Ke2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 180. Nc3+
+{ MCTS Visits: 404; Eval: 0.00 } 180... Kf2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 181. Nd5
+{ MCTS Visits: 299; Eval: 0.00 } 181... Ke2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 182. Nc3+
+{ MCTS Visits: 404; Eval: 0.00 } 182... Ke1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 183. Nd5
+{ MCTS Visits: 354; Eval: 0.00 } 183... Kd1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 184. Nc3+
+{ MCTS Visits: 424; Eval: 0.00 } 184... Ke1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 185. Nd5
+{ MCTS Visits: 354; Eval: 0.00 } 185... Ke2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 186. Nc3+
+{ MCTS Visits: 404; Eval: 0.00 } 186... Kf2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 187. Ne4+
+{ MCTS Visits: 286; Eval: 0.00 } 187... Kg1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 188. Nd2
+{ MCTS Visits: 340; Eval: 0.00 } 188... Kh2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 189. Ne4
+{ MCTS Visits: 400; Eval: 0.00 } 189... Kh1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 190. Nf2+
+{ MCTS Visits: 411; Eval: 0.00 } 190... Kg2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 191. Nd1
+{ MCTS Visits: 529; Eval: 0.00 } 191... Kf1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 192. Ne3+
+{ MCTS Visits: 557; Eval: 0.00 } 192... Kg1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 193. Nd1
+{ MCTS Visits: 558; Eval: 0.00 } 193... Kf1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 194. Ne3+
+{ MCTS Visits: 557; Eval: 0.00 } 194... Ke1
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 195. Nd5
+{ MCTS Visits: 329; Eval: 0.00 } 195... Kd2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 196. Nc3
+{ MCTS Visits: 432; Eval: 0.00 } 196... Ke3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 197. Nd5+
+{ MCTS Visits: 758; Eval: 0.00 } 197... Kd4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 198. Nc3
+{ MCTS Visits: 255; Eval: 0.00 } 198... Kc4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 199. Na4
+{ MCTS Visits: 375; Eval: 0.00 } 199... Kb4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 200. Nb6
+{ MCTS Visits: 765; Eval: 0.00 } 200... Ka5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 201. Nd5
+{ MCTS Visits: 393; Eval: 0.00 } 201... Kb5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 202. Nc3+
+{ MCTS Visits: 468; Eval: 0.00 } 202... Ka6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 203. Nd5
+{ MCTS Visits: 691; Eval: 0.00 } 203... Kb5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 204. Nc3+
+{ MCTS Visits: 468; Eval: 0.00 } 204... Ka6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 205. Nd5
+{ MCTS Visits: 691; Eval: 0.00 } 205... Ka5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 206. Nc3
+{ MCTS Visits: 645; Eval: 0.00 } 206... Kb6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 207. Nd5+
+{ MCTS Visits: 477; Eval: 0.00 } 207... Kb5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 208. Nc3+
+{ MCTS Visits: 468; Eval: 0.00 } 208... Ka5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 209. Nd5
+{ MCTS Visits: 515; Eval: 0.00 } 209... Ka4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 210. Nc3+
+{ MCTS Visits: 563; Eval: 0.00 } 210... Ka5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 211. Nd5
+{ MCTS Visits: 446; Eval: 0.00 } 211... Ka4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 212. Nc3+
+{ MCTS Visits: 486; Eval: 0.00 } 212... Kb4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 213. Nd5+
+{ MCTS Visits: 602; Eval: 0.00 } 213... Ka5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 214. Nc3
+{ MCTS Visits: 485; Eval: 0.00 } 214... Kb4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 215. Nd5+
+{ MCTS Visits: 473; Eval: 0.00 } 215... Ka4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 216. Nc3+
+{ MCTS Visits: 594; Eval: 0.00 } 216... Kb4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 217. Nd5+
+{ MCTS Visits: 505; Eval: 0.00 } 217... Kc4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.00 } 1/2-1/2
+

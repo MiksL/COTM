@@ -1,0 +1,130 @@
+[Event "MCTS vs Stockfish (ELO 2750) Match"]
+[Site "Local Machine"]
+[Date "2025.05.23"]
+[Round "1"]
+[White "MCTS (smartyPant-eloFloor2k-ep9.pth)"]
+[Black "Stockfish_ELO2750"]
+[Result "1-0"]
+[MCTSSimulations "1400"]
+[StockfishELOPlayedAs "2750"]
+
+1. e4 { MCTS Visits: 858; Eval: 0.30 } 1... e5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.33 } 2. Nf3
+{ MCTS Visits: 1170; Eval: 0.26 } 2... Nf6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.48 } 3. d4
+{ MCTS Visits: 971; Eval: 0.31 } 3... d5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.65 } 4. Nxe5
+{ MCTS Visits: 558; Eval: 0.34 } 4... dxe4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 1.24 } 5. Bc4
+{ MCTS Visits: 1325; Eval: 1.26 } 5... Be6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 1.37 } 6. Bxe6
+{ MCTS Visits: 1387; Eval: 1.39 } 6... fxe6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 1.48 } 7. c3
+{ MCTS Visits: 925; Eval: 0.86 } 7... Nc6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.99 } 8. Nxc6
+{ MCTS Visits: 840; Eval: 0.95 } 8... bxc6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.99 } 9. Qe2
+{ MCTS Visits: 635; Eval: 0.60 } 9... Qd5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.58 } 10. O-O
+{ MCTS Visits: 1118; Eval: 0.56 } 10... Bd6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.59 } 11. Nd2
+{ MCTS Visits: 908; Eval: 0.59 } 11... O-O
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.63 } 12. Re1
+{ MCTS Visits: 1177; Eval: 0.33 } 12... e5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.68 } 13. Nxe4
+{ MCTS Visits: 1333; Eval: 0.78 } 13... exd4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.88 } 14. Nxd6
+{ MCTS Visits: 891; Eval: 0.70 } 14... cxd6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.71 } 15. cxd4
+{ MCTS Visits: 1360; Eval: 0.66 } 15... Rae8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 1.24 } 16. Be3
+{ MCTS Visits: 1336; Eval: 1.03 } 16... Re6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 1.06 } 17. Rac1
+{ MCTS Visits: 1052; Eval: 0.88 } 17... Qxa2
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.91 } 18. Rxc6
+{ MCTS Visits: 1220; Eval: 0.85 } 18... Qb3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 1.44 } 19. Ra6
+{ MCTS Visits: 994; Eval: 1.04 } 19... Qb7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 1.03 } 20. Rea1
+{ MCTS Visits: 1330; Eval: 0.63 } 20... Qe4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.64 } 21. Rxa7
+{ MCTS Visits: 871; Eval: 0.26 } 21... Nd5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 1.03 } 22. Ra8
+{ MCTS Visits: 782; Eval: 1.19 } 22... h6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 2.04 } 23. Rxf8+
+{ MCTS Visits: 1393; Eval: 1.99 } 23... Kxf8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 2.15 } 24. Re1
+{ MCTS Visits: 419; Eval: 1.33 } 24... Qf5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 2.50 } 25. Qf3
+{ MCTS Visits: 594; Eval: 0.48 } 25... Qxf3
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.52 } 26. gxf3
+{ MCTS Visits: 1399; Eval: 0.47 } 26... Re7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.69 } 27. Bd2
+{ MCTS Visits: 885; Eval: 0.65 } 27... Rc7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.65 } 28. Rc1
+{ MCTS Visits: 1048; Eval: 0.58 } 28... Re7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 1.00 } 29. b4
+{ MCTS Visits: 682; Eval: 0.87 } 29... Ra7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.91 } 30. Rb1
+{ MCTS Visits: 874; Eval: 0.85 } 30... Kf7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 1.31 } 31. b5
+{ MCTS Visits: 1333; Eval: 1.14 } 31... Ke6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 1.23 } 32. b6
+{ MCTS Visits: 969; Eval: 0.78 } 32... Rb7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.84 } 33. Ba5
+{ MCTS Visits: 1341; Eval: 0.81 } 33... Nf4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.79 } 34. Kf1
+{ MCTS Visits: 1094; Eval: 0.74 } 34... Kd7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 0.84 } 35. Ke1
+{ MCTS Visits: 643; Eval: 0.54 } 35... Rb8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 1.04 } 36. Kd2
+{ MCTS Visits: 674; Eval: 1.09 } 36... Nd5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 1.72 } 37. Kd3
+{ MCTS Visits: 1105; Eval: 1.72 } 37... Nf6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 3.00 } 38. b7
+{ MCTS Visits: 951; Eval: 3.14 } 38... Kc6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 3.38 } 39. Rb6+
+{ MCTS Visits: 1185; Eval: 3.09 } 39... Kd7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 3.38 } 40. Kc4
+{ MCTS Visits: 663; Eval: 3.17 } 40... Kc7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 3.14 } 41. Rb5+
+{ MCTS Visits: 507; Eval: 3.24 } 41... Kd7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 3.41 } 42. d5
+{ MCTS Visits: 988; Eval: 3.38 } 42... Ng8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 4.40 } 43. Kd4
+{ MCTS Visits: 716; Eval: 3.12 } 43... Ne7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 3.34 } 44. Ke4
+{ MCTS Visits: 962; Eval: 3.38 } 44... Ng8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 4.73 } 45. Bc3
+{ MCTS Visits: 900; Eval: 4.91 } 45... h5
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 5.60 } 46. Bxg7
+{ MCTS Visits: 1033; Eval: 5.92 } 46... Ke7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 6.27 } 47. Bd4
+{ MCTS Visits: 580; Eval: 6.47 } 47... Nf6+
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 6.82 } 48. Bxf6+
+{ MCTS Visits: 552; Eval: 6.84 } 48... Kd7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 8.31 } 49. Kf5
+{ MCTS Visits: 483; Eval: 12.56 } 49... h4
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 99.79 } 50. Bxh4
+{ MCTS Visits: 1242; Eval: 99.79 } 50... Rf8+
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 99.79 } 51. Bf6
+{ MCTS Visits: 773; Eval: 99.79 } 51... Rb8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 99.82 } 52. h4
+{ MCTS Visits: 563; Eval: 99.85 } 52... Kc7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 99.85 } 53. h5
+{ MCTS Visits: 941; Eval: 99.87 } 53... Kd7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 99.89 } 54. h6
+{ MCTS Visits: 1252; Eval: 8.26 } 54... Kc7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 99.92 } 55. h7
+{ MCTS Visits: 1284; Eval: 8.17 } 55... Rf8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 99.95 } 56. h8=Q
+{ MCTS Visits: 995; Eval: 99.96 } 56... Rxh8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 99.96 } 57. Bxh8
+{ MCTS Visits: 1321; Eval: 99.97 } 57... Kb8
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 99.97 } 58. Ke6
+{ MCTS Visits: 647; Eval: 99.98 } 58... Ka7
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 99.98 } 59. b8=Q+
+{ MCTS Visits: 924; Eval: 99.99 } 59... Ka6
+{ StockfishELO2750 (ELO Limited SF Eval); Eval: 99.99 } 60. Qb6#
+{ MCTS Visits: 1167; Eval: 100.00 } 1-0
+
