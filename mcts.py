@@ -8,6 +8,7 @@ import traceback
 import random
 from encoding import ChessEncoder
 from neuralNetwork import ChessNN 
+from concurrent.futures import ThreadPoolExecutor
 
 class MCTS:
     """
@@ -72,10 +73,10 @@ class MCTS:
 
         # --- Process the NN's returned policy and value ---
         value = value_tensor.item() # NN value estimate [-1, 1]
-        policy_logits = policy_logits_tensor.squeeze().cpu().numpy() # Shape (4416,)
+        policy_logits = policy_logits_tensor.squeeze().cpu().numpy() # Shape (1968,)
         policy_size = policy_logits.shape[0]
-        if policy_size != 4416:
-             print(f"FATAL: NN policy output size is {policy_size}, but expected 4416 based on encoder!")
+        #if policy_size != 1968:
+            #print(f"FATAL: NN policy output size is {policy_size}, but expected 1968 based on encoder!")
 
         legal_moves = list(board.legal_moves)
         if not legal_moves: return {}, value # Return empty policy if no legal moves
@@ -85,7 +86,7 @@ class MCTS:
         for move in legal_moves:
             try:
                 # Encode the move using the encoder
-                nn_index = self.encoder.encode_move(move) # Get the index (0-4415)
+                nn_index = self.encoder.encode_move(move) # Get the index (0-1968)
                 if 0 <= nn_index < policy_size:
                     valid_legal_moves.append(move)
                     logits_for_legal_moves.append(policy_logits[nn_index])
@@ -246,8 +247,46 @@ class MCTS:
             # Backpropagate the value obtained from the leaf node (NN eval or terminal result)
             # 'value' is from the perspective of the player AT THE LEAF NODE
             self.backpropagate(path, value)
+            
+    def run_simulations_parallel(self, num_threads=4):
+        """
+        Runs MCTS simulations in parallel using multiple threads.
+        """
+        def run_simulation_subset(simulations_to_run):
+            for _ in range(simulations_to_run):
+                node = self.initial_board.copy()
+                path = []
+                while True:
+                    node_fen = node.fen()
+                    if node.is_game_over():
+                        value = self._get_game_result(node)
+                        break
+                    if node_fen not in self.P:
+                        try:
+                            policy_map, value = self._get_policy_and_value(node)
+                            self.P[node_fen] = policy_map
+                        except Exception as e:
+                            print(f"Error during expansion: {e}")
+                            value = 0.0
+                        break
+                    else:
+                        best_move = self._select_move_puct(node)
+                        if best_move is None:
+                            value = self._get_game_result(node)
+                            break
+                        path.append(node_fen + best_move.uci())
+                        node.push(best_move)
+                self.backpropagate(path, value)
 
-    def get_best_move_and_stats(self) -> tuple[chess.Move | None, dict, dict]: # MODIFIED return type
+        print(f"Running {self.simulations} MCTS simulations in parallel using {num_threads} threads.")
+        # Divide simulations among threads
+        simulations_per_thread = self.simulations // num_threads
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            futures = [executor.submit(run_simulation_subset, simulations_per_thread) for _ in range(num_threads)]
+            for future in futures:
+                future.result()  # Wait for all threads to finish
+
+    def get_best_move_and_stats(self) -> tuple[chess.Move | None, dict, dict]:
         """
         Runs simulations and returns the best move, visit counts, and Q-values for root moves.
 
@@ -279,9 +318,9 @@ class MCTS:
         max_visits = -1
         best_move = None
 
-        print("\n--- MCTS Root Node Stats ---")
-        print("Move   | Visits | Avg Value (Q)")
-        print("-------|--------|---------------")
+        #print("\n--- MCTS Root Node Stats ---")
+        #print("Move   | Visits | Avg Value (Q)")
+        #print("-------|--------|---------------")
         move_stats_list = []
 
         # Collect stats for final decision and printing
@@ -298,9 +337,9 @@ class MCTS:
                  best_move = move
 
         # Sort stats by visits for printing
-        move_stats_list.sort(key=lambda x: x[1], reverse=True)
-        for move, visits, avg_value in move_stats_list[:15]: # Print top 15
-            print(f"{str(move):<6} | {visits:<6} | {avg_value:+.4f}")
+        # move_stats_list.sort(key=lambda x: x[1], reverse=True)
+        # for move, visits, avg_value in move_stats_list[:15]: # Print top 15
+        #     print(f"{str(move):<6} | {visits:<6} | {avg_value:+.4f}")
 
 
         # Fallback if no visits recorded
@@ -313,6 +352,6 @@ class MCTS:
              if best_move not in root_q_stats: root_q_stats[best_move] = 0.0
 
 
-        print(f"\nSelected best move (by visits): {best_move} ({max_visits} visits)")
+        #print(f"\nSelected best move (by visits): {best_move} ({max_visits} visits)")
         #  Return Q-values as well
         return best_move, root_visit_stats, root_q_stats

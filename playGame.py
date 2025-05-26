@@ -14,10 +14,10 @@ import chess.pgn
 import datetime
 import os
 import re
-from engines import RawNNEngine, MCTSEngine
-from encoding import ChessEncoder
-from neuralNetwork import ChessNN 
-from mcts import MCTS
+from core.engines import RawNNEngine, MCTSEngine
+from core.encoding import ChessEncoder
+from neural_network.neuralNetwork import ChessNN 
+from core.mcts.mcts import MCTS
 
 # ================================================================
 # == Stockfish Configuration ==

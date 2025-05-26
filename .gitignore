@@ -166,6 +166,7 @@ lightning_logs/
 .temp_model/
 saved_engine_games/
 saved_comparison_games/
+mcts_sp_checkpoints/
 
 # Ignore possible Stockfish files
 stockfish*
@@ -173,5 +174,8 @@ stockfish*
 # Ignore identifier files 
 *.Identifier
 
-# Ignore pgn files
+# Ignore pgn files in the root directory
 *.pgn
+
+# Do not ignore pgn files in mcts_vs_stockfish_2750_elo
+!mcts_vs_stockfish_2750_elo/*.pgn
