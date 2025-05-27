@@ -179,3 +179,4 @@ stockfish*
 
 # Do not ignore pgn files in mcts_vs_stockfish_2750_elo
 !mcts_vs_stockfish_2750_elo/*.pgn
+!selfPlay_vs_existingGames/*.pgn
