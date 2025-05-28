@@ -15,5 +15,9 @@
 #### v7
 ### Existing games
 #### smartyPant
+* Trained on ~2 million lichess games from December 2024 with an elo floor of 2000
+* Consists of 20 residual blocks
+* Trained for 9 epochs
+* Performs similar to Stockfish 17 AVX2 when Elo limited to 2750
 
 
