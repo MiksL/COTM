@@ -9,7 +9,6 @@ import traceback
 import math
 import random
 
-# --- Worker Init - opens file handle ---
 def hdf5_worker_init(worker_id):
     """Opens the HDF5 file once per worker process."""
     worker_info = get_worker_info()
@@ -33,7 +32,6 @@ def hdf5_worker_init(worker_id):
         traceback.print_exc()
         original_dataset._worker_hdf5_handle = None
 
-# --- Chunked HDF Dataset ---
 class ChunkedHDF5Dataset(Dataset):
     """
     Dataset that treats each HDF5 chunk as a single item.
@@ -67,7 +65,7 @@ class ChunkedHDF5Dataset(Dataset):
                 if self._total_samples == 0:
                     raise ValueError("No samples found in file.")
 
-                # --- Determine samples per chunk ---
+                # Determine samples per chunk
                 # Assuming chunking is defined and consistent for the first dimension
                 pos_chunks = f['positions'].chunks
                 if pos_chunks is None:
@@ -185,7 +183,7 @@ def chunked_collate(batch_list):
         # Separate the components across the list of chunks
         pos_chunks, mov_chunks, val_chunks = zip(*batch_list)
 
-        # Concatenate the chunks along the sample dimension (axis 0)
+        # Concatenate the chunks along the sample dimension
         # Example: if batch_list has 2 chunks of 2048 samples,
         # resulting pos_batch_np will have shape (4096, 18, 8, 8)
         pos_batch_np = np.concatenate(pos_chunks, axis=0)

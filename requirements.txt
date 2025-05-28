@@ -1,0 +1,10 @@
+chess==1.11.1
+h5py==3.13.0
+hdf5plugin==5.1.0
+matplotlib==3.10.3
+numpy==2.2.6
+python-dotenv==1.1.0
+pytorch_lightning==2.5.0.post0
+stockfish==3.28.0
+torch==2.7.0+cu128
+tqdm==4.66.5

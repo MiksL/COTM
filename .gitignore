@@ -167,6 +167,7 @@ lightning_logs/
 saved_engine_games/
 saved_comparison_games/
 mcts_sp_checkpoints/
+output/
 
 # Ignore possible Stockfish files
 stockfish*
@@ -179,3 +180,4 @@ stockfish*
 
 # Do not ignore pgn files in mcts_vs_stockfish_2750_elo
 !mcts_vs_stockfish_2750_elo/*.pgn
+!selfPlay_vs_existingGames/*.pgn

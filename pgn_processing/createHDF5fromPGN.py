@@ -446,7 +446,7 @@ if __name__ == "__main__":
     USE_SF_EVAL = True
 
     # Stockfish Live Eval Config
-    SF_EVAL_DEPTH = 6 # Depth low for speedier eval
+    SF_EVAL_DEPTH = 6 # Faster eval
     SF_THREADS_PER_WORKER = 1
     
     DIVISOR = 600 # Adjust for scaling CP scores to [-1, 1] range

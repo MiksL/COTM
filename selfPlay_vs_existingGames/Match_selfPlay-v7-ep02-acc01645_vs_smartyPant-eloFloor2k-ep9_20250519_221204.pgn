@@ -1,0 +1,15 @@
+[Event "Engine Match (MCTS)"]
+[Site "Local Machine"]
+[Date "2025.05.19"]
+[Round "1"]
+[White "selfPlay-v7-ep02-acc01645.pth"]
+[Black "smartyPant-eloFloor2k-ep9.pth"]
+[Result "0-1"]
+[MCTSSimulations "1100"]
+
+1. a4 Nf6 2. e4 Nxe4 3. Qh5 Nf6 4. Qe5 Nc6 5. Qxc7 Qxc7 6. Be2 e6 7. h4 Bc5 8.
+Rh3 Nd4 9. Bh5 Nxh5 10. Re3 Nxc2+ 11. Kf1 Nxa1 12. d4 Bxd4 13. Ne2 Bxe3 14.
+fxe3 Qh2 15. b3 Ng3+ 16. Nxg3 Qxg3 17. Ba3 Nxb3 18. h5 Qxe3 19. h6 Nd2+ 20.
+Nxd2 Qxd2 21. hxg7 Rg8 22. g4 Rxg7 23. g5 Rxg5 24. Bb4 Rf5+ 25. Kg1 Qf2+ 26.
+Kh1 Rh5# 0-1
+

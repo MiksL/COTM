@@ -144,14 +144,12 @@ class ChessEncoder:
         self.all_possible_moves = sorted(list(move_set), key=lambda m: (m.from_square, m.to_square, m.promotion or 0))
         self.move_to_index = {move: idx for idx, move in enumerate(self.all_possible_moves)}
 
-
-    # --- Encoder/Decoder methods remain the same ---
     def encode_move(self, move: chess.Move) -> int:
         """Encodes a chess.Move object into its unique index."""
         encoded_index = self.move_to_index.get(move)
         if encoded_index is None:
             print(f"Warning: Move {move.uci()} not found in precomputed map!")
-            return -1 # Or raise an error
+            return -1 # Error if move is invalid
         return encoded_index
 
     def decode_move(self, index: int) -> chess.Move | None:
@@ -160,7 +158,7 @@ class ChessEncoder:
             return self.all_possible_moves[index]
         else:
             print(f"Warning: Move index {index} out of range ({self.num_possible_moves} total)!")
-            return None # Or raise an error
+            return None # No move found
         
     @staticmethod
     def encode_board(board):
@@ -203,11 +201,59 @@ class ChessEncoder:
         # Material balance plane calculation
         total_material = white_material + black_material
         if total_material > 0:
-            # Calculate ratio as float, then scaled and casted to int for uint8 plane
+            # Calculate ratio as float, then scale and cast to int for uint8 plane
             white_ratio_scaled = int((white_material / total_material) * 255.0)
-             # Value is clamped to [0, 255] just in case
+             # Value is clamped to [0, 255]
             planes[17].fill(max(0, min(255, white_ratio_scaled)))
         else:
             planes[17].fill(128) # If no material - neutral value
 
         return planes
+    
+    @staticmethod
+    def decode_board(planes: np.ndarray) -> chess.Board:
+        """Decodes a board from a 18x8x8 numpy array. Only decodes piece positions - used for testing"""
+        board = chess.Board(None)
+        piece_map = board.piece_map()
+        
+        # Planes 1-12 are the only relevant ones to decode state back into a board
+        # 1-6 - white pieces
+        # 7-12 - black pieces
+        
+        # Iterate over the planes, place pieces accordingly
+        for piece_idx in range(6):
+            # Get all squares with this piece type
+            squares = np.argwhere(planes[piece_idx] == 1)
+            for rank, file in squares:
+                piece_type = piece_idx + 1 # Convert to 1-7
+                piece = chess.Piece(piece_type, chess.WHITE)
+                piece_map[chess.square(file, rank)] = piece
+        
+        # Iterate over the black planes
+        for piece_idx in range(6):
+            # Get all squares with this piece type
+            squares = np.argwhere(planes[piece_idx + 6] == 1)
+            for rank, file in squares:
+                piece_type = piece_idx + 1 # Convert to 1-7
+                piece = chess.Piece(piece_type, chess.BLACK)
+                piece_map[chess.square(file, rank)] = piece
+                
+                
+        # Turn plane decoding (shows next player to move)
+        if planes[12].sum() > 0:
+            board.turn = chess.WHITE
+        else:
+            board.turn = chess.BLACK
+        
+                
+        # TODO - if deemed necessary, add other relevant plane decoding
+        
+        
+        
+        # Update the board with the new piece map
+        board.set_piece_map(piece_map)
+        return board
+        
+        
+        
+        

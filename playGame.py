@@ -1,333 +1,383 @@
 import chess
 import chess.engine
 import torch
-import torch.nn as nn
 import time
-import torch.nn.functional as F
 import traceback
-from typing import List, Dict, Tuple, Optional
-import numpy as np
-import math
-from collections import defaultdict
-import random
+from typing import List, Optional, Dict, Tuple
+import numpy as np # Retained for MCTS if it uses it internally
+import math # Retained for MCTS or other calcs, and for engine_utils helpers
+from collections import defaultdict # Retained for MCTS
+import random # Retained for MCTS
 import chess.pgn
 import datetime
 import os
 import re
+
 from core.engines import RawNNEngine, MCTSEngine
 from core.encoding import ChessEncoder
-from neural_network.neuralNetwork import ChessNN 
-from core.mcts.mcts import MCTS
+# neuralNetwork import is now primarily handled by engine_utils.py
+from core.mcts.mcts import MCTS # Retained as MCTS engine uses it directly
 
-# ================================================================
-# == Stockfish Configuration ==
-# ================================================================
 from dotenv import load_dotenv
-load_dotenv() # Load .env file
-STOCKFISH_PATH = os.getenv("STOCKFISH_PATH") # Path to stockfish binary
-try:
-    STOCKFISH_THINK_TIME = float(os.getenv("STOCKFISH_THINK_TIME", "0.1")) 
-    STOCKFISH_THREADS = int(os.getenv("STOCKFISH_THREADS", "12"))
-except ValueError:
-    print("Warning: Invalid STOCKFISH_THINK_TIME or STOCKFISH_THREADS in .env. Using defaults.")
-    STOCKFISH_THINK_TIME = 0.1
-    STOCKFISH_THREADS = 12
+load_dotenv() # Load .env file early
 
-# ==============================================================================
-# == ChessGameUI Class ==
-# ==============================================================================
+# Import new utility functions
+from engine_utils import (
+    load_chess_model, 
+    managed_uci_engine, 
+    get_stockfish_options,
+    get_uci_eval_string,
+    get_uci_pv_san,
+    STOCKFISH_PATH_ENV, # Use the path from engine_utils
+    STOCKFISH_DEFAULT_THINK_TIME_ENV # Use the default think time from engine_utils
+)
+from utils import create_pgn_game_object, save_pgn_file
+
+# Global constants for think times, can be overridden by function params
+# STOCKFISH_THINK_TIME and STOCKFISH_THREADS are now sourced from engine_utils.py if not passed directly
+
 class ChessGameUI:
-    """ Chess game UI using MCTSEngine """
-    def __init__(self, model_state_dict, num_simulations: int = 400, exploration_weight: float = 1.4, stockfish_engine: Optional[chess.engine.SimpleEngine] = None):
+    def __init__(self, model_state_dict: Dict, num_simulations: int = 400, exploration_weight: float = 1.4, aux_stockfish_for_mcts_eval: Optional[chess.engine.SimpleEngine] = None):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        try:
-            self.model = ChessNN(input_channels=18)
-            self.model.load_state_dict(model_state_dict)
-            self.model.to(self.device)
-            self.model.eval()
-            print("Model loaded successfully for ChessGameUI.")
-        except NameError: raise RuntimeError("ChessNN class not available.")
-        except FileNotFoundError: raise FileNotFoundError("Model state dict file not found.")
-        except Exception as e: raise RuntimeError(f"Error initializing model in UI: {e}")
+        
+        self.model = load_chess_model(model_state_dict, self.device)
+        if not self.model:
+            raise RuntimeError("Failed to load ChessNN model for UI.")
 
         self.board = chess.Board()
-        try:
-            encoder_instance = ChessEncoder()
-            # Pass the instantiated model, encoder, MCTS params, and stockfish engine
-            self.engine = MCTSEngine(self.model,
-                                      encoder=encoder_instance,
-                                      num_simulations=num_simulations,
-                                      exploration_weight=exploration_weight,
-                                      stockfish_engine=stockfish_engine)
-            print(f"MCTSEngine (MCTS) initialized for UI.")
-        except RuntimeError as e:
-            raise RuntimeError(f"Could not initialize MCTSEngine: {e}")
+        encoder_instance = ChessEncoder()
+        self.engine = MCTSEngine(
+            self.model,
+            encoder=encoder_instance,
+            num_simulations=num_simulations,
+            exploration_weight=exploration_weight,
+            stockfish_engine=aux_stockfish_for_mcts_eval # MCTS can use an external SF for its own evals
+        )
+        print(f"MCTSEngine initialized for UI (Sims: {num_simulations}, Device: {self.device}).")
         self.move_history = []
 
-    def make_engine_move(self):
-        """ Make the best move using the MCTS engine and return it. """
+    def make_engine_move(self) -> Optional[chess.Move]:
         if self.board.is_game_over(): return None
-        best_move, move_visits = self.engine.select_move(self.board)
+        # select_move in MCTSEngine might print its own thinking/evals
+        best_move, _ = self.engine.select_move(self.board) 
         if best_move:
-            print(f"Engine confirming play: {best_move.uci()}") 
+            print(f"Engine (MCTS) plays: {best_move.uci()}")
             self.board.push(best_move)
             self.move_history.append(best_move)
             return best_move
-        print("Engine (MCTS) could not find a move to confirm.")
+        print("Engine (MCTS) could not find a move.")
         return None
 
     def make_player_move(self, move: chess.Move) -> bool:
-        if move in self.board.legal_moves: self.board.push(move); self.move_history.append(move); return True
+        if move in self.board.legal_moves:
+            self.board.push(move)
+            self.move_history.append(move)
+            return True
         return False
+    
     def get_legal_moves(self) -> List[chess.Move]: return list(self.board.legal_moves)
-    def is_game_over(self): return self.board.is_game_over()
-    def get_result(self): return self.board.result()
-    def get_board(self): return self.board
+    def is_game_over(self) -> bool: return self.board.is_game_over()
+    def get_result(self) -> str: return self.board.result()
+    def get_board(self) -> chess.Board: return self.board
+    
     def undo_move(self) -> bool:
         if self.move_history: self.board.pop(); self.move_history.pop(); return True
         return False
+        
     def reset_game(self): self.board.reset(); self.move_history = []
 
+def play_human_vs_engine(model_state_dict: Dict, num_simulations: int, exploration_weight: float = 1.4, use_stockfish_comparison: bool = False):
+    print(f"--- Human vs MCTS Engine (Sims: {num_simulations}) ---")
+    stockfish_options = get_stockfish_options() # Default options for comparison
 
-# ==============================================================================
-# == Human vs MCTSEngine ==
-# ==============================================================================
-
-def play_human_vs_engine(model_state_dict, num_simulations: int, exploration_weight: float = 1.4, use_stockfish: bool = False):
-     """ Manages human vs engine game loop using MCTS. """
-     stockfish = None
-     try:
-        if use_stockfish:
-            if STOCKFISH_PATH and os.path.exists(STOCKFISH_PATH):
-                 try:
-                    stockfish = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH)
-                    stockfish.configure({"Threads": STOCKFISH_THREADS})
-                    print(f"Stockfish initialized at {STOCKFISH_PATH} for comparison.")
-                 except Exception as sf_e:
-                     print(f"Failed to initialize Stockfish: {sf_e}. Disabling comparison.")
-                     stockfish = None
-            else:
-                 print("Stockfish path not found/configured. Disabling comparison.")
-
-        game = ChessGameUI(model_state_dict,
-                           num_simulations=num_simulations,
-                           exploration_weight=exploration_weight,
-                           stockfish_engine=stockfish) # Pass engine instance here
-        model_name = "Engine (MCTS)"
-        print(f"\nStarting game against {model_name}. You are White.")
-        print(f"Engine using device: {game.engine.device}")
-
-        while not game.is_game_over():
-            print("\n" + "="*30); print(f"Move {game.board.fullmove_number}"); print(game.board)
-
-            if game.board.turn == chess.WHITE: # Human's turn
-                move_uci = input("Your move (UCI, e.g., e2e4), 'undo', or 'reset': ").strip()
-                if move_uci.lower() == 'undo':
-                    if game.undo_move():
-                        if game.undo_move(): print("Two moves undone.")
-                        else: print("Only engine move undone.")
-                    else: print("Cannot undo further!")
-                    continue
-                elif move_uci.lower() == 'reset': game.reset_game(); print("Game reset."); continue
-                try: move = chess.Move.from_uci(move_uci)
-                except ValueError: print("Invalid move format! Use UCI."); continue
-                if not game.make_player_move(move): print("Illegal move! Try again."); continue
-            else: # Engine's turn (Black)
-                print("Engine thinking (MCTS)...")
-                engine_move = game.make_engine_move() # Calls select_move which prints comparison
-                if not engine_move: print("Engine failed to make a move."); break
-
-        print("\n--- Game Over ---"); print(game.board); print(f"Result: {game.get_result()}")
-
-     except RuntimeError as rte: print(f"\nFATAL ERROR during game setup: {rte}"); traceback.print_exc()
-     except Exception as e: print(f"\nAn error occurred during the game: {e}"); traceback.print_exc()
-     finally:
-        if stockfish: stockfish.quit(); print("Stockfish engine closed.")
-     input("\nPress Enter to return to the menu...")
-
-# ==============================================================================
-# == MCTSEngine vs MCTSEngine ==
-# ==============================================================================
-
-def play_engine_vs_engine(state_dict1, state_dict2, num_simulations: int, exploration_weight: float = 1.4, use_stockfish=False, pause_after_move=False, model1_name="NN1", model2_name="NN2"):
-     """ Manages game loop for two MCTS engines, saves the game as PGN. """
-     stockfish = None
-        # Create a directory to save the PGN files
-     save_dir = "saved_engine_games"; os.makedirs(save_dir, exist_ok=True)
-     try:
-        # Check if the models are compatible
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu"); print(f"\nEngines using device: {device}")
-
-        if use_stockfish:
-            if STOCKFISH_PATH and os.path.exists(STOCKFISH_PATH):
-                 try: stockfish = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH); stockfish.configure({"Threads": STOCKFISH_THREADS}); print(f"Stockfish initialized at {STOCKFISH_PATH} for comparison.")
-                 except Exception as sf_e: print(f"Failed to initialize Stockfish: {sf_e}. Disabling comparison."); stockfish = None
-            else: print("Stockfish path not found/configured. Disabling comparison.")
-
-        print(f"Instantiating {model1_name}..."); model1_instance = ChessNN(input_channels=18); model1_instance.load_state_dict(state_dict1); model1_instance.to(device); model1_instance.eval()
-        print(f"Instantiating {model2_name}..."); model2_instance = ChessNN(input_channels=18); model2_instance.load_state_dict(state_dict2); model2_instance.to(device); model2_instance.eval()
-
-        encoder_instance = ChessEncoder() # Create one encoder instance
-        engine1 = MCTSEngine(model1_instance, encoder=encoder_instance, num_simulations=num_simulations, exploration_weight=exploration_weight, stockfish_engine=stockfish)
-        engine2 = MCTSEngine(model2_instance, encoder=encoder_instance, num_simulations=num_simulations, exploration_weight=exploration_weight, stockfish_engine=stockfish)
-
-
-        # Set up the game board
-        board = chess.Board(); 
-        print("\n--- Starting Engine vs Engine Game ---"); 
-        print(f"Engine 1 (White): {model1_name}"); 
-        print(f"Engine 2 (Black): {model2_name}"); 
-        print(f"MCTS Simulations: {num_simulations} per move (c_puct={exploration_weight})\n")
-
-        # Initialize PGN game
-        game_pgn = chess.pgn.Game(); 
-        game_pgn.headers["Event"] = "Engine Match (MCTS)"; 
-        game_pgn.headers["Site"] = "Local Machine"; 
-        game_pgn.headers["Date"] = datetime.datetime.now().strftime("%Y.%m.%d"); 
-        game_pgn.headers["Round"] = "1"; 
-        game_pgn.headers["White"] = model1_name; 
-        game_pgn.headers["Black"] = model2_name; 
-        game_pgn.headers["MCTSSimulations"] = str(num_simulations); 
-        current_pgn_node = game_pgn
-
-        # Game loop
-        while not board.is_game_over():
-            # Print the board and move number
-            print("\n" + "="*30); move_num_str = f"Move {board.fullmove_number}"; print(move_num_str if board.turn == chess.WHITE else move_num_str + "..."); print(board)
-            # Select the engine based on the turn
-            current_engine, engine_name = (engine1, f"Engine 1 (W - {model1_name})") if board.turn == chess.WHITE else (engine2, f"Engine 2 (B - {model2_name})")
-            # Call the engine to select a move
-            print(f"{engine_name} thinking (MCTS)...")
-            best_move, move_visits = current_engine.select_move(board) # Calls MCTS + comparison inside
-            if best_move:
-                print(f"{engine_name} confirming play: {best_move.uci()}") # Simplified confirm
-                board.push(best_move)
-                current_pgn_node = current_pgn_node.add_variation(best_move) # Add to PGN
-                if pause_after_move: input("Enter to continue...")
-            else: print(f"{engine_name} (MCTS) failed to find a legal move!"); break
-
-        print("\n--- Game Over ---"); print(board); game_result = board.result(); print(f"Result: {game_result}"); game_pgn.headers["Result"] = game_result
-
-        # Save the game as PGN
-        safe_m1 = re.sub(r'[\\/*?:"<>|]', "", model1_name.replace('.pth','')); 
-        safe_m2 = re.sub(r'[\\/*?:"<>|]', "", model2_name.replace('.pth','')); 
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S"); 
-        pgn_filename = f"Match_{safe_m1}_vs_{safe_m2}_{timestamp}.pgn"; 
-        pgn_filepath = os.path.join(save_dir, pgn_filename)
-        print(f"\nSaving game to {pgn_filepath}...")
+    with managed_uci_engine(STOCKFISH_PATH_ENV if use_stockfish_comparison else None, stockfish_options, "comparison") as sf_comparison_engine:
         try:
-            with open(pgn_filepath, "w", encoding="utf-8") as f: exporter = chess.pgn.FileExporter(f); game_pgn.accept(exporter)
-            print("Game saved successfully.")
-        except Exception as e: print(f"Error saving PGN file: {e}")
+            game_ui = ChessGameUI(model_state_dict, num_simulations, exploration_weight, aux_stockfish_for_mcts_eval=sf_comparison_engine)
+            print(f"You are White. Engine is Black. MCTS using device: {game_ui.engine.device}")
 
-     except RuntimeError as rte: print(f"\nFATAL ERROR during engine setup: {rte}"); traceback.print_exc()
-     except KeyboardInterrupt: print("\nGame interrupted by user.")
-     except Exception as e: print(f"\nAn error occurred during the engine vs engine game: {e}"); traceback.print_exc()
-     finally:
-         if stockfish: stockfish.quit(); print("Stockfish engine closed.")
-     input("\nPress Enter to return to the menu...")
+            while not game_ui.is_game_over():
+                print("="*30 + f" Move {game_ui.board.fullmove_number} " + "="*30)
+                print(game_ui.board)
 
+                if game_ui.board.turn == chess.WHITE: # Human's turn
+                    move_uci = input("Your move (UCI, e.g., e2e4), 'undo', or 'reset': ").strip().lower()
+                    if move_uci == 'undo':
+                        if game_ui.undo_move(): # Undo player move
+                            if game_ui.undo_move(): print("Player and Engine moves undone.") # Undo engine move
+                            else: print("Player move undone (was start of game or engine failed).")
+                        else: print("Cannot undo further.")
+                        continue
+                    elif move_uci == 'reset': game_ui.reset_game(); print("Game reset."); continue
+                    try:
+                        move = chess.Move.from_uci(move_uci)
+                        if not game_ui.make_player_move(move): print("Illegal move! Try again.")
+                    except ValueError: print("Invalid move format! Use UCI (e.g. e2e4).")
+                else: # Engine's turn
+                    print("Engine thinking (MCTS)...")
+                    if not game_ui.make_engine_move():
+                        print("Engine failed to make a move. Game over or error.")
+                        break
+            
+            print("--- Game Over ---"); print(game_ui.board); print(f"Result: {game_ui.get_result()}")
 
-# ==============================================================================
-# == Raw NN vs MCTS engines ==
-# ==============================================================================
-def play_raw_vs_mcts(state_dict, num_simulations: int, exploration_weight: float = 1.4, raw_plays_white: bool = True, use_stockfish=False, pause_after_move=False, model_name="NN"):
-     """ Manages game loop for Raw NN vs MCTS engine using the same model. """
-     stockfish = None
-    # Create a directory to save the PGN files
-     save_dir = "saved_comparison_games"; os.makedirs(save_dir, exist_ok=True)
+        except RuntimeError as rte: print(f"FATAL ERROR: {rte}"); traceback.print_exc()
+        except Exception as e: print(f"An error occurred: {e}"); traceback.print_exc()
+    
+    input("\\nPress Enter to return to the menu...")
 
-     try:
-        # Check if the models are compatible
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu"); print(f"\nEngine using device: {device}")
-        if use_stockfish:
-            if STOCKFISH_PATH and os.path.exists(STOCKFISH_PATH):
-                 try: stockfish = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH); stockfish.configure({"Threads": STOCKFISH_THREADS}); print(f"Stockfish initialized at {STOCKFISH_PATH} for comparison.")
-                 except Exception as sf_e: print(f"Failed to initialize Stockfish: {sf_e}. Disabling comparison."); stockfish = None
-            else: print("Stockfish path not found/configured. Disabling comparison.")
+def _play_general_engine_game(
+    engine1_player, engine1_name: str, 
+    engine2_player, engine2_name: str,
+    pgn_event_name: str,
+    pgn_save_dir: str,
+    pgn_filename_prefix: str,
+    pgn_additional_headers: Optional[Dict[str, str]] = None,
+    aux_eval_stockfish: Optional[chess.engine.SimpleEngine] = None, # For post-move analysis if needed
+    stockfish_eval_think_time: float = STOCKFISH_DEFAULT_THINK_TIME_ENV,
+    pause_after_move: bool = False,
+    mcts_sims_for_header: Optional[int] = None # Only for PGN header if MCTS is one player
+):
+    board = chess.Board()
+    game_pgn = create_pgn_game_object(engine1_name, engine2_name, pgn_event_name, additional_headers=pgn_additional_headers)
+    if mcts_sims_for_header and "MCTSSimulations" not in game_pgn.headers: # Add if not already set
+        game_pgn.headers["MCTSSimulations"] = str(mcts_sims_for_header)
+    current_pgn_node = game_pgn
 
-        print(f"Instantiating model {model_name}..."); model_instance = ChessNN(input_channels=18); model_instance.load_state_dict(state_dict); model_instance.to(device); model_instance.eval()
-        encoder_instance = ChessEncoder() # Create one encoder
+    print(f"--- {pgn_event_name} ---")
+    print(f"White: {engine1_name} | Black: {engine2_name}")
+    if isinstance(engine1_player, MCTSEngine): print(f"({engine1_name} MCTS Sims: {engine1_player.num_simulations})")
+    if isinstance(engine2_player, MCTSEngine): print(f"({engine2_name} MCTS Sims: {engine2_player.num_simulations})")
 
-        print("Creating Raw NN Engine..."); raw_engine = RawNNEngine(model_instance, encoder=encoder_instance)
-        print("Creating MCTS Engine..."); mcts_engine = MCTSEngine(model_instance, encoder=encoder_instance, num_simulations=num_simulations, exploration_weight=exploration_weight, stockfish_engine=stockfish)
-
-        # Set up the engines based on the color         
-        if raw_plays_white: engine1, engine2 = raw_engine, mcts_engine; name1, name2 = f"RawNN ({model_name})", f"MCTS ({model_name})"
-        else: engine1, engine2 = mcts_engine, raw_engine; name1, name2 = f"MCTS ({model_name})", f"RawNN ({model_name})"
-
-        # Set up the game board
-        board = chess.Board(); 
-        print("\n--- Starting Raw NN vs MCTS Game ---"); 
-        print(f"Engine 1 (White): {name1}"); 
-        print(f"Engine 2 (Black): {name2}"); 
-        print(f"MCTS Simulations (for MCTS engine): {num_simulations} per move (c_puct={exploration_weight})\n")
-
-        # Initialize PGN game
-        game_pgn = chess.pgn.Game(); 
-        game_pgn.headers["Event"] = "Raw NN vs MCTS Comparison"; 
-        game_pgn.headers["Site"] = "Local Machine"; 
-        game_pgn.headers["Date"] = datetime.datetime.now().strftime("%Y.%m.%d"); 
-        game_pgn.headers["Round"] = "1"; game_pgn.headers["White"] = name1; 
-        game_pgn.headers["Black"] = name2; game_pgn.headers["MCTSSimulations"] = str(num_simulations); 
-        current_pgn_node = game_pgn
-
-        # Game loop
+    try:
         while not board.is_game_over():
-            print("\n" + "="*30); 
-            move_num_str = f"Move {board.fullmove_number}"; 
-            print(move_num_str if board.turn == chess.WHITE else move_num_str + "..."); 
+            print("="*30 + f" Move {board.fullmove_number}{'...' if board.turn == chess.BLACK else ''} " + "="*30)
             print(board)
-            current_engine, engine_name = (engine1, name1) if board.turn == chess.WHITE else (engine2, name2)
-            print(f"{engine_name} thinking...")
-            best_move, move_stats = current_engine.select_move(board) # Calls appropriate select_move
 
-            if best_move:
-                # Print confirmation based on engine type
-                if isinstance(current_engine, RawNNEngine):
-                     prob = move_stats.get(best_move, 0.0)
-                     print(f"{engine_name} confirming play: {best_move.uci()} (Raw NN Prob: {prob:.4f})")
-                else: # MCTS engine
-                     visits = move_stats.get(best_move, 0)
-                     # Q value isn't returned directly here, but printed inside select_move
-                     print(f"{engine_name} confirming play: {best_move.uci()} (MCTS Visits: {visits})")
+            current_engine, current_engine_name = (engine1_player, engine1_name) if board.turn == chess.WHITE else (engine2_player, engine2_name)
+            
+            print(f"{current_engine_name} thinking...")
+            best_move = None
+            move_pgn_comment = ""
+            
+            # --- Move selection logic based on engine type ---
+            if isinstance(current_engine, (MCTSEngine, RawNNEngine)):
+                best_move, move_stats_dict = current_engine.select_move(board) # MCTS/RawNN print their own primary eval
+                if best_move:
+                    if isinstance(current_engine, RawNNEngine):
+                        prob = move_stats_dict.get(best_move, 0.0)
+                        move_pgn_comment = f"RawNN Prob: {prob:.4f}"
+                        print(f"{current_engine_name} plays: {best_move.uci()} ({move_pgn_comment})")
+                    else: # MCTSEngine
+                        visits = move_stats_dict.get(best_move, 0)
+                        # Q-value/SF-eval might be printed by MCTSEngine's select_move if its internal SF is active
+                        move_pgn_comment = f"MCTS Visits: {visits}" 
+                        print(f"{current_engine_name} plays: {best_move.uci()} ({move_pgn_comment})")
 
-                board.push(best_move)
-                current_pgn_node = current_pgn_node.add_variation(best_move)
+            elif isinstance(current_engine, chess.engine.SimpleEngine): # External UCI engine (e.g. Stockfish player)
+                think_time = getattr(current_engine, 'think_time_override', stockfish_eval_think_time) # Allow override
+                limit = chess.engine.Limit(time=think_time)
+                result = current_engine.play(board, limit)
+                best_move = result.move
+                if best_move:
+                    score_str = get_uci_eval_string(result.info.get("score"), board.turn)
+                    pv_str = get_uci_pv_san(board, result.info.get(chess.engine.INFO_PV))
+                    move_pgn_comment = f"ExtUCI {score_str}{pv_str}"
+                    print(f"{current_engine_name} plays: {best_move.uci()} ({score_str}{pv_str})")
+            else:
+                print(f"ERROR: Unknown engine type for {current_engine_name}!")
+                break
+            
+            if not best_move:
+                print(f"{current_engine_name} failed to find a move or an error occurred.")
+                break
 
-                # Optional Stockfish analysis after move for Raw NN engine
-                # (MCTS engine already does this comparison inside its select_move)
-                if isinstance(current_engine, RawNNEngine) and stockfish:
-                     try:
-                         limit = chess.engine.Limit(time=STOCKFISH_THINK_TIME)
-                         info = stockfish.analyse(board, limit) # Analyse board AFTER raw NN move
-                         # Use the helper method from the RawNNEngine instance
-                         sf_eval_str = current_engine._get_stockfish_score_str(info)
-                         if "N/A" not in sf_eval_str and "Err" not in sf_eval_str:
-                             print(f"  Stockfish eval after {best_move.uci()}: {sf_eval_str.replace('SF: ','')}")
-                     except Exception as sf_eval_e: print(f"SF Error evaluating after raw NN move: {sf_eval_e}")
+            board.push(best_move)
+            current_pgn_node = current_pgn_node.add_variation(best_move)
+            current_pgn_node.comment = move_pgn_comment.strip()
 
-                if pause_after_move: input("Enter to continue...")
-            else: print(f"{engine_name} failed to find a legal move!"); break
+            # Optional auxiliary Stockfish analysis (full strength) after the move
+            if aux_eval_stockfish and aux_eval_stockfish != getattr(current_engine, 'stockfish_engine', None): # Avoid re-eval if MCTS used same SF
+                try:
+                    limit = chess.engine.Limit(time=stockfish_eval_think_time)
+                    info = aux_eval_stockfish.analyse(board, limit) # Analyse board AFTER move
+                    sf_eval_str = get_uci_eval_string(info.get("score"), board.turn) # board.turn is next player's turn
+                    print(f"  Aux SF eval after {best_move.uci()}: {sf_eval_str}")
+                    current_pgn_node.comment += f"; AuxSF {sf_eval_str}"
+                except Exception as sf_eval_e: print(f"Aux SF Error evaluating: {sf_eval_e}")
+            
+            if pause_after_move: input("Press Enter to continue...")
 
-        print("\n--- Game Over ---"); print(board); game_result = board.result(); print(f"Result: {game_result}"); game_pgn.headers["Result"] = game_result
+        print("--- Game Over ---"); print(board); game_result = board.result(); print(f"Result: {game_result}")
+        game_pgn.headers["Result"] = game_result
+        save_pgn_file(game_pgn, pgn_save_dir, pgn_filename_prefix, engine1_name, engine2_name)
+        return game_result, True # True indicates MCTS was white if applicable, adapt as needed for specific callers
 
-        # Save the game as PGN
-        safe_m = re.sub(r'[\\/*?:"<>|]', "", model_name.replace('.pth','')); 
-        w_player = "RawNN" if raw_plays_white else "MCTS"; 
-        b_player = "MCTS" if raw_plays_white else "RawNN"; 
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S"); 
-        pgn_filename = f"Compare_{w_player}_vs_{b_player}_{safe_m}_{timestamp}.pgn"; 
-        pgn_filepath = os.path.join(save_dir, pgn_filename)
-        print(f"\nSaving comparison game to {pgn_filepath}...")
-        try:
-            with open(pgn_filepath, "w", encoding="utf-8") as f: exporter = chess.pgn.FileExporter(f); game_pgn.accept(exporter)
-            print("Game saved successfully.")
-        except Exception as e: print(f"Error saving PGN file: {e}")
+    except KeyboardInterrupt: print("\\nGame interrupted by user.")
+    except Exception as e: print(f"\\nAn error occurred during {pgn_event_name}: {e}"); traceback.print_exc()
+    return board.result() if board else "ERROR", False # Default return for errors/interrupts
 
-     except RuntimeError as rte: print(f"\nFATAL ERROR during game setup: {rte}"); traceback.print_exc()
-     except KeyboardInterrupt: print("\nGame interrupted by user.")
-     except Exception as e: print(f"\nAn error occurred during the Raw NN vs MCTS game: {e}"); traceback.print_exc()
-     finally:
-        if stockfish: stockfish.quit(); print("Stockfish engine closed.")
-     input("\nPress Enter to return to the menu...")
+def play_engine_vs_engine(state_dict1: Dict, state_dict2: Dict, num_simulations: int, exploration_weight: float = 1.4, use_stockfish_eval: bool = False, pause_after_move: bool = False, model1_name: str = "NN1", model2_name: str = "NN2"):
+    print(f"--- MCTS ({model1_name}) vs MCTS ({model2_name}) ---")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    mcts_model1 = load_chess_model(state_dict1, device)
+    mcts_model2 = load_chess_model(state_dict2, device)
+    if not mcts_model1 or not mcts_model2: return
+
+    stockfish_options = get_stockfish_options()
+    with managed_uci_engine(STOCKFISH_PATH_ENV if use_stockfish_eval else None, stockfish_options, "MCTS_aux_eval") as sf_aux_engine:
+        encoder = ChessEncoder()
+        engine1 = MCTSEngine(mcts_model1, encoder, num_simulations, exploration_weight, stockfish_engine=sf_aux_engine)
+        engine2 = MCTSEngine(mcts_model2, encoder, num_simulations, exploration_weight, stockfish_engine=sf_aux_engine)
+
+        _play_general_engine_game(
+            engine1, model1_name, engine2, model2_name,
+            pgn_event_name="MCTS vs MCTS Match",
+            pgn_save_dir="saved_engine_games",
+            pgn_filename_prefix="Match_MCTS",
+            pgn_additional_headers={"MCTSSimulations": str(num_simulations)},
+            aux_eval_stockfish=sf_aux_engine if use_stockfish_eval else None, # Can be same as MCTS's internal one
+            pause_after_move=pause_after_move
+        )
+    input("\\nPress Enter to return to the menu...")
+
+
+def play_raw_vs_mcts(state_dict: Dict, num_simulations: int, exploration_weight: float = 1.4, raw_plays_white: bool = True, use_stockfish_eval: bool = False, pause_after_move: bool = False, model_name: str = "NN"):
+    print(f"--- RawNN vs MCTS ({model_name}) ---")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    shared_model = load_chess_model(state_dict, device)
+    if not shared_model: return
+
+    stockfish_options = get_stockfish_options()
+    with managed_uci_engine(STOCKFISH_PATH_ENV if use_stockfish_eval else None, stockfish_options, "comparison_eval") as sf_aux_engine:
+        encoder = ChessEncoder()
+        raw_nn_player = RawNNEngine(shared_model, encoder)
+        # MCTS can use the aux SF for its internal evaluations if desired
+        mcts_player = MCTSEngine(shared_model, encoder, num_simulations, exploration_weight, stockfish_engine=sf_aux_engine)
+
+        engine1, name1, engine2, name2 = (raw_nn_player, f"RawNN_{model_name}", mcts_player, f"MCTS_{model_name}") if raw_plays_white else \
+                                         (mcts_player, f"MCTS_{model_name}", raw_nn_player, f"RawNN_{model_name}")
+        
+        _play_general_engine_game(
+            engine1, name1, engine2, name2,
+            pgn_event_name="RawNN vs MCTS Comparison",
+            pgn_save_dir="saved_comparison_games",
+            pgn_filename_prefix=f"Compare_{'RawNN_vs_MCTS' if raw_plays_white else 'MCTS_vs_RawNN'}",
+            pgn_additional_headers={"MCTSSimulations": str(num_simulations)}, # Belongs to MCTS player
+            aux_eval_stockfish=sf_aux_engine if use_stockfish_eval else None,
+            pause_after_move=pause_after_move
+        )
+    input("\\nPress Enter to return to the menu...")
+
+def play_mcts_vs_external_engine(
+    model_state_dict: Dict, num_simulations: int, exploration_weight: float,
+    uci_engine_path: str, mcts_plays_white: bool = True,
+    use_aux_stockfish_eval: bool = False, pause_after_move: bool = False, model_name: str = "MCTS_NN",
+    external_engine_think_time: float = STOCKFISH_DEFAULT_THINK_TIME_ENV # Use default from engine_utils
+):
+    print(f"--- MCTS ({model_name}) vs External UCI Engine ---")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    mcts_nn_model = load_chess_model(model_state_dict, device)
+    if not mcts_nn_model: return
+
+    # Options for the auxiliary Stockfish (full strength for eval)
+    aux_sf_options = get_stockfish_options() 
+    # Options for the external UCI engine (can be anything, not necessarily Stockfish)
+    # We don't apply ELO limits or specific thread counts here unless passed in uci_engine_path or its own config
+    external_uci_options = {} # External engine might have its own defaults or config file
+
+    with managed_uci_engine(STOCKFISH_PATH_ENV if use_aux_stockfish_eval else None, aux_sf_options, "MCTS_aux_eval") as sf_aux_engine, \
+         managed_uci_engine(uci_engine_path, external_uci_options, "external_player") as ext_uci_player:
+        
+        if not ext_uci_player:
+            print(f"FATAL: Could not start external UCI player from {uci_engine_path}.")
+            return
+
+        # Allow external engine to have a specific think time set for its play
+        # This is a bit of a hack, attaching it to the engine object for _play_general_engine_game
+        ext_uci_player.think_time_override = external_engine_think_time 
+
+        encoder = ChessEncoder()
+        mcts_player = MCTSEngine(mcts_nn_model, encoder, num_simulations, exploration_weight, stockfish_engine=sf_aux_engine)
+        
+        ext_engine_id_name = ext_uci_player.id.get("name", os.path.basename(uci_engine_path))
+
+        engine1, name1, engine2, name2 = (mcts_player, f"MCTS_{model_name}", ext_uci_player, ext_engine_id_name) if mcts_plays_white else \
+                                         (ext_uci_player, ext_engine_id_name, mcts_player, f"MCTS_{model_name}")
+
+        _play_general_engine_game(
+            engine1, name1, engine2, name2,
+            pgn_event_name="MCTS vs External UCI Match",
+            pgn_save_dir="saved_mcts_vs_uci_games",
+            pgn_filename_prefix=f"Game_MCTS_vs_{re.sub(r'[^a-zA-Z0-9_.-]', '', ext_engine_id_name)}",
+            pgn_additional_headers={"MCTSSimulations": str(num_simulations), "ExternalEngineThinkTime": str(external_engine_think_time)},
+            aux_eval_stockfish=sf_aux_engine if use_aux_stockfish_eval else None,
+            pause_after_move=pause_after_move,
+            stockfish_eval_think_time=STOCKFISH_DEFAULT_THINK_TIME_ENV, # For the aux SF eval
+            mcts_sims_for_header=num_simulations if isinstance(mcts_player, MCTSEngine) else None
+        )
+    # input("\nPress Enter to return to the menu...") # Often automated in main.py loop for this mode
+
+def play_mcts_vs_stockfish_elo(
+    model_state_dict: Dict, num_simulations: int, exploration_weight: float,
+    stockfish_elo_limit: int, mcts_plays_white: bool = True,
+    use_aux_stockfish_eval: bool = False, # For a full-strength Stockfish doing side evaluations
+    pause_after_move: bool = False, model_name: str = "MCTS_NN",
+    elo_limited_stockfish_think_time: float = STOCKFISH_DEFAULT_THINK_TIME_ENV # Think time for ELO SF
+) -> Tuple[str, bool]:
+    print(f"--- MCTS ({model_name}, Sims: {num_simulations}) vs Stockfish ELO {stockfish_elo_limit} ---")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    game_result_for_caller = "ERROR" # Default
+
+    if not STOCKFISH_PATH_ENV:
+        print(f"FATAL ERROR: STOCKFISH_PATH not set. This mode requires Stockfish.")
+        return game_result_for_caller, mcts_plays_white
+
+    mcts_nn_model = load_chess_model(model_state_dict, device)
+    if not mcts_nn_model: return game_result_for_caller, mcts_plays_white
+
+    # Options for the auxiliary Stockfish (full strength if used)
+    aux_sf_options = get_stockfish_options()
+    # Options for the ELO-limited Stockfish player (force 1 thread for ELO for consistency unless user specified otherwise for this engine)
+    elo_sf_options = get_stockfish_options(elo_limit=stockfish_elo_limit, threads=1) 
+
+    with managed_uci_engine(STOCKFISH_PATH_ENV if use_aux_stockfish_eval else None, aux_sf_options, "aux_eval_full_strength") as aux_eval_sf_engine, \
+         managed_uci_engine(STOCKFISH_PATH_ENV, elo_sf_options, f"Stockfish_ELO{stockfish_elo_limit}") as elo_limited_sf_player:
+
+        if not elo_limited_sf_player:
+            print(f"FATAL ERROR: Could not initialize ELO-limited Stockfish player.")
+            return game_result_for_caller, mcts_plays_white
+        
+        # Attach think time for the ELO limited player
+        elo_limited_sf_player.think_time_override = elo_limited_stockfish_think_time
+
+        encoder = ChessEncoder()
+        mcts_player = MCTSEngine(mcts_nn_model, encoder, num_simulations, exploration_weight, stockfish_engine=aux_eval_sf_engine)
+        
+        sf_player_name = f"Stockfish_ELO{stockfish_elo_limit}"
+        engine1, name1, engine2, name2 = (mcts_player, f"MCTS_{model_name}", elo_limited_sf_player, sf_player_name) if mcts_plays_white else \
+                                         (elo_limited_sf_player, sf_player_name, mcts_player, f"MCTS_{model_name}")
+
+        pgn_headers = {
+            "MCTSSimulations": str(num_simulations),
+            "StockfishELOPlayedAs": str(stockfish_elo_limit),
+            "StockfishELOThinkTime": str(elo_limited_stockfish_think_time)
+        }
+        
+        game_result, _ = _play_general_engine_game( # The second part of tuple (bool) is not directly used by this caller
+            engine1, name1, engine2, name2,
+            pgn_event_name=f"MCTS vs Stockfish ELO {stockfish_elo_limit}",
+            pgn_save_dir="saved_mcts_vs_stockfish_elo_games",
+            pgn_filename_prefix=f"Game_MCTS_vs_SFELO{stockfish_elo_limit}",
+            pgn_additional_headers=pgn_headers,
+            aux_eval_stockfish=aux_eval_sf_engine if use_aux_stockfish_eval else None,
+            stockfish_eval_think_time=STOCKFISH_DEFAULT_THINK_TIME_ENV, # For the aux SF
+            pause_after_move=pause_after_move,
+            mcts_sims_for_header=num_simulations if isinstance(mcts_player, MCTSEngine) else None
+        )
+        game_result_for_caller = game_result 
+    
+    # input("\nPress Enter to return to the menu...") # Typically automated by main.py loop
+    return game_result_for_caller, mcts_plays_white
