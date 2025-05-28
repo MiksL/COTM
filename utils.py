@@ -1,5 +1,9 @@
 import os
 import torch
+import chess.pgn
+import datetime
+import re
+from typing import Optional, Dict
 
 # Input validation utilities
 def get_int_input(prompt, default=None, min_val=None):
@@ -77,4 +81,42 @@ def get_training_params():
         'learning_rate': get_float_input("Enter learning rate (default 0.0005): ", 0.0005),
         'val_split': get_float_input("Enter validation split (default 0.1): ", 0.1),
         'patience': get_int_input("Enter early stopping patience (default 5): ", 5, 1)
-    } 
+    }
+
+# PGN Handling Utilities
+def create_pgn_game_object(white_name: str, black_name: str, event: str, site: str = "Local Machine", additional_headers: Optional[Dict[str, str]] = None) -> chess.pgn.Game:
+    """Creates a PGN game object with standard headers."""
+    game_pgn = chess.pgn.Game()
+    game_pgn.headers["Event"] = event
+    game_pgn.headers["Site"] = site
+    game_pgn.headers["Date"] = datetime.datetime.now().strftime("%Y.%m.%d")
+    game_pgn.headers["Round"] = "1" # Default or make it a parameter
+    game_pgn.headers["White"] = white_name
+    game_pgn.headers["Black"] = black_name
+    if additional_headers:
+        for key, value in additional_headers.items():
+            game_pgn.headers[key] = str(value) # Ensure values are strings for PGN
+    return game_pgn
+
+def save_pgn_file(game_pgn: chess.pgn.Game, base_save_dir: str, filename_prefix: str, p1_name: str, p2_name: str, include_timestamp: bool = True) -> Optional[str]:
+    """Saves a PGN game to a file with a standardized name, returns the filepath."""
+    try:
+        os.makedirs(base_save_dir, exist_ok=True)
+        
+        safe_p1 = re.sub(r'[\\/*?:"<>|]', "", str(p1_name).replace('.pth',''))
+        safe_p2 = re.sub(r'[\\/*?:"<>|]', "", str(p2_name).replace('.pth',''))
+        
+        timestamp_str = f"_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}" if include_timestamp else ""
+        
+        pgn_filename = f"{filename_prefix}_{safe_p1}_vs_{safe_p2}{timestamp_str}.pgn"
+        pgn_filepath = os.path.join(base_save_dir, pgn_filename)
+        
+        print(f"\nSaving PGN game to {pgn_filepath}...")
+        with open(pgn_filepath, "w", encoding="utf-8") as f:
+            exporter = chess.pgn.FileExporter(f)
+            game_pgn.accept(exporter)
+        print("PGN game saved successfully.")
+        return pgn_filepath
+    except Exception as e:
+        print(f"Error saving PGN file: {e}")
+        return None 
