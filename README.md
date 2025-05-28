@@ -20,4 +20,29 @@
 * Trained for 9 epochs
 * Performs similar to Stockfish 17 AVX2 when Elo limited to 2750
 
+<div align="center">
+
+| MCTS simulations | Stockfish Elo | Win | Draw | Loss |
+| :--------------: | :-------------: | :---: | :----: | :----: |
+| 800              | 2000            | 4     | 0      | 0      |
+| 1000             | 2000            | 4     | 0      | 0      |
+| 800              | 2250            | 4     | 0      | 0      |
+| 1000             | 2250            | 3     | 1      | 0      |
+| 800              | 2500            | 3     | 1      | 0      |
+| 1000             | 2500            | 4     | 0      | 0      |
+
+</div>
+
+<div align="center">
+
+| MCTS simulations | Win | Draw | Loss |
+| :--------------: | :---: | :----: | :----: |
+| 800              | 10    | 3      | 7      |
+| 1000             | 8     | 5      | 7      |
+| 1200             | 5     | 6      | 9      |
+| 1400             | 11    | 6      | 3      |
+| 1600             | 5     | 9      | 6      |
+
+</div>
+
 
